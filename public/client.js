@@ -89,7 +89,7 @@ socket.on('joined', room => {
         });
 });
 
-//server emits ready (the caller)
+//server emits ready
 socket.on('ready', () => {
     if (isCaller) {
         //creates an RTCPeerConnectoin object
@@ -119,8 +119,8 @@ socket.on('ready', () => {
     }
 });
 
-//server emits offer (not the caller)
-socket.on('offer', e => {
+//server emits offer
+socket.on('offer', sessionDesc => {
     if (!isCaller) {
         //creates an RTCPeerConnectoin object
         rtcPeerConnection = new RTCPeerConnection(iceServers);
@@ -133,7 +133,9 @@ socket.on('offer', e => {
         rtcPeerConnection.addStream(localStream);
 
         //stores the offer as a remote description
-        rtcPeerConnection.setRemoteDescription(new RTCSessionDescription(e));
+        rtcPeerConnection.setRemoteDescription(
+            new RTCSessionDescription(sessionDesc)
+        );
 
         //prepares an Answer
         rtcPeerConnection
@@ -153,17 +155,19 @@ socket.on('offer', e => {
 });
 
 //server emits answer
-socket.on('answer', e => {
+socket.on('answer', sessionDesc => {
     //stores it as remote desc
-    rtcPeerConnection.setRemoteDescription(new RTCSessionDescription(e));
+    rtcPeerConnection.setRemoteDescription(
+        new RTCSessionDescription(sessionDesc)
+    );
 });
 
 //server emits candidate
-socket.on('canditate', e => {
+socket.on('canditate', event => {
     //creates canditate object
     let candidate = new RTCIceCandidate({
-        sdpMLineIndex: e.label,
-        candidate: e.candidate,
+        sdpMLineIndex: event.label,
+        candidate: event.candidate,
     });
     //stores candidate
     rtcPeerConnection.addIceCandidate(candidate);

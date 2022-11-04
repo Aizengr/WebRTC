@@ -14,12 +14,11 @@ io.on('connection', socket => {
 
     socket.on('create or join', room => {
         console.log(`create or join to room ${room}`);
+        //count number of users on room (may be undefined)
+        let myRoom = io.sockets.adapter.rooms.get(room);
+        let numClients = myRoom ? myRoom.size : 0;
 
-        //count number of users on room
-        let myRoom = io.sockets.adapter.rooms[room] || { length: 0 };
-        let numClients = myRoom.length;
         console.log(`room: ${room} has ${numClients} clients`);
-
         if (numClients === 0) {
             socket.join(room); //if 0 then joins and sends created
             socket.emit('created', room);
