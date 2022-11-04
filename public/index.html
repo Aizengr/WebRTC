@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>WebRTC Application</title>
+    </head>
+    <body>
+        <div id="selectRoom">
+            <label>Type the room number</label>
+            <input id="roomNumber" type="text" />
+            <button id="goRoom" type="submit">Go</button>
+        </div>
+
+        <div id="consultingRoom">
+            <video
+                id="localVideo"
+                autoplay
+                style="border: 1px solid #000"
+                width="520"
+                height="520"
+            ></video>
+            <video
+                id="remoteVideo"
+                autoplaywidth="520"
+                style="border: 1px solid #000"
+                width="520"
+                height="520"
+            ></video>
+        </div>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="client.js"></script>
+    </body>
+</html>
