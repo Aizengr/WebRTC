@@ -14,7 +14,7 @@ app.use(express.static('public'));
 io.on('connection', socket => {
     socket.on('create', () => {
         let roomID = uuidv4();
-        socket.join(roomID); //if 0 then joins and sends created
+        socket.join(roomID);
         socket.emit('created', roomID);
     });
 

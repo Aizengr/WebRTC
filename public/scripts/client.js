@@ -2,7 +2,7 @@
 
 //html elements
 const divSelectRoom = document.getElementById('selectRoom');
-const divConsultingRoom = document.getElementById('consultingRoom');
+const divConferenceRoom = document.getElementById('conferenceRoom');
 const inputRoomNumber = document.getElementById('roomNumber');
 const btnGoRoom = document.getElementById('goRoom');
 const localVideo = document.getElementById('localVideo');
@@ -13,6 +13,8 @@ const modalText = document.getElementById('modalText');
 const btnCloseModal = document.getElementById('gotRoomID');
 const divNewRoom = document.getElementById('newRoom');
 
+const mainGrid = document.querySelector('.main-grid');
+const callFlex = document.querySelector('.call-flexbox');
 const modal = document.querySelector('.modal');
 const overlay = document.querySelector('.overlay');
 //GLOBAL
@@ -87,6 +89,8 @@ function onIceCandidate(event) {
 
 //server emits created
 socket.on('created', room => {
+    mainGrid.classList.add('hidden');
+    callFlex.classList.remove('hidden');
     roomNumber = room;
     modalText.innerHTML = `<h1>Here is your new room ID:</h1>
     <h2>${room}</h2>
@@ -108,6 +112,8 @@ socket.on('created', room => {
 
 //server emits joined
 socket.on('joined', room => {
+    mainGrid.classList.add('hidden');
+    callFlex.classList.remove('hidden');
     navigator.mediaDevices
         .getUserMedia(streamConstraints)
         .then(stream => {

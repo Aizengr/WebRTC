@@ -1,5 +1,99 @@
-.hidden {
-    display: none;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: inherit;
+}
+
+html {
+    /* To make use of full height of page*/
+    min-height: 100%;
+    margin: 0;
+}
+body {
+    min-height: 100%;
+    margin: 0;
+    font-family: 'Nunito', sans-serif;
+}
+
+h2,
+p,
+label {
+    margin-bottom: 0.5em;
+    font-weight: 500;
+}
+
+.roomNumber {
+    margin-bottom: 1rem;
+    border-radius: 0.3rem;
+    width: 70%;
+    height: 20px;
+    box-sizing: border-box;
+    background-color: rgb(212, 212, 212);
+}
+
+.btn {
+    color: #fff;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-weight: 300;
+    transition: all 0.2s;
+    background-color: #9a1953;
+    backdrop-filter: blur(10px);
+    padding: 0.4rem 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 5rem 35rem rgba(0, 0, 0, 0.1);
+}
+
+.btn:active {
+    transform: translateY(15%);
+    box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.15);
+}
+
+.btn:focus {
+    outline: none;
+}
+
+.btn:hover {
+    background-color: #3c393b;
+    color: #c65588;
+}
+
+.website-title {
+    font-family: fantasy;
+    text-align: start;
+    padding-left: 5rem;
+    font-size: 3rem;
+    height: 100vh;
+    color: #fff;
+    line-height: 2;
+    background: linear-gradient(to top left, #353434, #1e1d1d, #000000);
+}
+
+.main-grid {
+    text-align: center;
+    row-gap: 2em;
+    display: grid;
+    grid-template-areas:
+        'title title generate'
+        'title title join';
+}
+
+.main-grid-item1 {
+    grid-area: title;
+}
+
+.main-grid-item2 {
+    grid-area: generate;
+    align-self: center;
+}
+
+.main-grid-item3 {
+    grid-area: join;
+    justify-self: stretch;
 }
 
 .modal {
@@ -24,4 +118,29 @@
     background-color: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(3px);
     z-index: 5;
+}
+
+.conferenceRoom {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1em;
+    grid-auto-flow: column;
+    border: solid #000;
+}
+
+.con-grid-item {
+    border: solid #000;
+}
+
+.chat {
+    width: 30%;
+    border: solid #000;
+}
+
+.call-flexbox {
+    display: flex;
+}
+
+.hidden {
+    display: none;
 }
