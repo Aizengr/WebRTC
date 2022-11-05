@@ -12,7 +12,7 @@ const remoteVideo = document.getElementById('remoteVideo');
 
 let roomNumber;
 let localStream;
-let remoteStream;
+// let remoteStream;
 let rtcPeerConnection;
 let isCaller;
 
@@ -41,12 +41,6 @@ btnGoRoom.addEventListener('click', e => {
     }
 });
 
-//receiving audio and video stream from others
-function onAddStream(event) {
-    remoteVideo.srcObject = event.stream;
-    remoteStream = event.stream;
-}
-
 //sending candidate message to server
 function onIceCandidate(event) {
     if (event.candidate) {
@@ -63,6 +57,8 @@ function onIceCandidate(event) {
 
 //server emits created
 socket.on('created', room => {
+    console.log('GOT CREATED EMIT');
+
     navigator.mediaDevices
         .getUserMedia(streamConstraints) //getting media devices
         .then(stream => {
@@ -77,6 +73,7 @@ socket.on('created', room => {
 
 //server emits joined
 socket.on('joined', room => {
+    console.log('GOT JOINED EMIT');
     navigator.mediaDevices
         .getUserMedia(streamConstraints)
         .then(stream => {
@@ -92,15 +89,24 @@ socket.on('joined', room => {
 //server emits ready
 socket.on('ready', () => {
     if (isCaller) {
+        console.log('GOT READY EMIT');
+
         //creates an RTCPeerConnectoin object
         rtcPeerConnection = new RTCPeerConnection(iceServers);
 
+        //adds current local stream to the object
+        localStream.getTracks().forEach(track => {
+            rtcPeerConnection.addTrack(track, localStream);
+        });
+
         //adds event listeners to the newly created object above
         rtcPeerConnection.onicecandidate = onIceCandidate;
-        rtcPeerConnection.onddstream = onAddStream;
-
-        //adds current local stream to the object
-        rtcPeerConnection.addStream(localStream);
+        rtcPeerConnection.addEventListener('track', async event => {
+            const [remoteStream] = event.streams;
+            console.log(remoteStream);
+            remoteVideo.srcObject = remoteStream;
+            console.log('src added');
+        });
 
         //prepares an Offer
         rtcPeerConnection
@@ -122,15 +128,23 @@ socket.on('ready', () => {
 //server emits offer
 socket.on('offer', sessionDesc => {
     if (!isCaller) {
+        console.log('GOT OFFER EMIT');
         //creates an RTCPeerConnectoin object
         rtcPeerConnection = new RTCPeerConnection(iceServers);
 
+        //adds current local stream to the object
+        localStream.getTracks().forEach(track => {
+            rtcPeerConnection.addTrack(track, localStream);
+        });
+
         //adds event listeners to the newly created object above
         rtcPeerConnection.onicecandidate = onIceCandidate;
-        rtcPeerConnection.onddstream = onAddStream;
-
-        //adds current local stream to the object
-        rtcPeerConnection.addStream(localStream);
+        rtcPeerConnection.addEventListener('track', async event => {
+            const [remoteStream] = event.streams;
+            console.log(remoteStream);
+            remoteVideo.srcObject = remoteStream;
+            console.log('src added');
+        });
 
         //stores the offer as a remote description
         rtcPeerConnection.setRemoteDescription(
@@ -156,6 +170,7 @@ socket.on('offer', sessionDesc => {
 
 //server emits answer
 socket.on('answer', sessionDesc => {
+    console.log('GOT ANSWER EMIT');
     //stores it as remote desc
     rtcPeerConnection.setRemoteDescription(
         new RTCSessionDescription(sessionDesc)
@@ -163,7 +178,8 @@ socket.on('answer', sessionDesc => {
 });
 
 //server emits candidate
-socket.on('canditate', event => {
+socket.on('candidate', event => {
+    console.log('GOT CANDIDATE EMIT');
     //creates canditate object
     let candidate = new RTCIceCandidate({
         sdpMLineIndex: event.label,

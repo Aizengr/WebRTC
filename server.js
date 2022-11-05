@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const { CLIENT_RENEG_LIMIT } = require('tls');
 const app = express();
 let http = require('http').Server(app);
 let io = require('socket.io')(http);
@@ -17,14 +18,13 @@ io.on('connection', socket => {
         //count number of users on room (may be undefined)
         let myRoom = io.sockets.adapter.rooms.get(room);
         let numClients = myRoom ? myRoom.size : 0;
-
-        console.log(`room: ${room} has ${numClients} clients`);
+        console.log(numClients);
         if (numClients === 0) {
             socket.join(room); //if 0 then joins and sends created
             socket.emit('created', room);
         } else if (numClients === 1) {
             //if there is already a user in the room, joins and sends joined
-            socket.join('room');
+            socket.join(room);
             socket.emit('joined', room);
         } else {
             socket.emit('full', room); //full room CHANGE
