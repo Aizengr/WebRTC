@@ -9,12 +9,12 @@ const localVideo = document.getElementById('localVideo');
 const remoteVideo = document.getElementById('remoteVideo');
 const btnGenerateRoom = document.getElementById('generateRoom');
 const modalroomID = document.getElementById('roomID');
-const modal = document.querySelector('.modal');
 const modalText = document.getElementById('modalText');
 const btnCloseModal = document.getElementById('gotRoomID');
-
 const divNewRoom = document.getElementById('newRoom');
 
+const modal = document.querySelector('.modal');
+const overlay = document.querySelector('.overlay');
 //GLOBAL
 
 let roomNumber;
@@ -37,6 +37,16 @@ let streamConstraints = { audio: true, video: true };
 //connecting to socket.io server
 const socket = io();
 
+const openModal = () => {
+    modal.classList.remove('hidden');
+    overlay.classList.remove('hidden');
+};
+
+const closeModal = () => {
+    modal.classList.add('hidden');
+    overlay.classList.add('hidden');
+};
+
 //listener for room button
 btnGoRoom.addEventListener('click', e => {
     roomNumber = inputRoomNumber.value;
@@ -49,8 +59,16 @@ btnGenerateRoom.addEventListener('click', event => {
 });
 
 //listener for closing modal window
-btnCloseModal.addEventListener('click', e => {
-    modal.classList.add('hidden');
+btnCloseModal.addEventListener('click', closeModal);
+
+//listening for click outside modal window
+overlay.addEventListener('click', closeModal);
+
+//listener for esc => closing modal
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        closeModal();
+    }
 });
 
 //sending candidate message to server
@@ -70,12 +88,12 @@ function onIceCandidate(event) {
 //server emits created
 socket.on('created', room => {
     roomNumber = room;
-
     modalText.innerHTML = `<h1>Here is your new room ID:</h1>
     <h2>${room}</h2>
     <p>You can share the ID with your peers 😊</p>`;
 
-    modal.classList.remove('hidden');
+    openModal();
+
     navigator.mediaDevices
         .getUserMedia(streamConstraints) //getting media devices
         .then(stream => {
@@ -202,6 +220,8 @@ socket.on('candidate', event => {
 
 socket.on('roomnotfound', room => {
     modalText.innerHTML = `<h1>Couldn't find room!</h1>
-    <p>There is no room with the specified ID. Please recheck the ID provided or create a new room.`;
-    modal.classList.remove('hidden');
+    <p>There is no room with the specified ID. 
+    
+    Please recheck the ID provided or create a new room.`;
+    openModal();
 });
