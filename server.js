@@ -1,5 +1,6 @@
 'use strict';
 
+const { v4: uuidv4 } = require('uuid');
 const express = require('express');
 const { CLIENT_RENEG_LIMIT } = require('tls');
 const app = express();
@@ -11,23 +12,24 @@ app.use(express.static('public'));
 
 //signal handlers
 io.on('connection', socket => {
-    console.log('a user connected');
+    socket.on('create', () => {
+        let roomID = uuidv4();
+        socket.join(roomID); //if 0 then joins and sends created
+        socket.emit('created', roomID);
+    });
 
-    socket.on('create or join', room => {
-        console.log(`create or join to room ${room}`);
+    socket.on('join', room => {
+        console.log(room);
+
         //count number of users on room (may be undefined)
         let myRoom = io.sockets.adapter.rooms.get(room);
-        let numClients = myRoom ? myRoom.size : 0;
-        console.log(numClients);
-        if (numClients === 0) {
-            socket.join(room); //if 0 then joins and sends created
-            socket.emit('created', room);
-        } else if (numClients === 1) {
-            //if there is already a user in the room, joins and sends joined
+        if (myRoom) {
+            //if room exists
             socket.join(room);
             socket.emit('joined', room);
         } else {
-            socket.emit('full', room); //full room CHANGE
+            //if room does not exist
+            socket.emit('roomnotfound', room);
         }
     });
 

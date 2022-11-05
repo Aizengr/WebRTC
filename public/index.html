@@ -4,11 +4,22 @@
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="style.css" />
         <title>WebRTC Application</title>
     </head>
     <body>
+        <div id="newRoom">
+            Create a brand new Room ID:
+            <button id="generateRoom" type="submit">Create</button>
+        </div>
+
+        <div class="modal hidden">
+            <div id="modalText"></div>
+            <button id="gotRoomID" type="submit">Got it!</button>
+        </div>
+
         <div id="selectRoom">
-            <label>Type the room number</label>
+            <label>Enter an existing room</label>
             <input id="roomNumber" type="text" />
             <button id="goRoom" type="submit">Go</button>
         </div>
@@ -32,6 +43,6 @@
         </div>
 
         <script src="/socket.io/socket.io.js"></script>
-        <script src="client.js"></script>
+        <script src="scripts/client.js"></script>
     </body>
 </html>
