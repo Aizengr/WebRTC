@@ -11,11 +11,13 @@ const modalroomID = document.getElementById('roomID');
 const modalText = document.getElementById('modalText');
 const btnCloseModal = document.getElementById('gotRoomID');
 const divNewRoom = document.getElementById('newRoom');
+const btnCopyID = document.getElementById('copyID');
 
 const mainGrid = document.querySelector('.main-grid');
 const callGrid = document.querySelector('.call-ui-grid');
 const modal = document.querySelector('.modal');
 const overlay = document.querySelector('.overlay');
+const titleText = document.querySelector('.title');
 //GLOBAL
 
 let roomNumber;
@@ -72,6 +74,23 @@ document.addEventListener('keydown', e => {
     }
 });
 
+//copy ID button listener
+btnCopyID.addEventListener('click', () => {
+    btnCopyID.disabled = true;
+    navigator.clipboard.writeText(roomNumber);
+    let original = btnCopyID.textContent;
+    btnCopyID.textContent = 'Copied ☑️';
+    setTimeout(() => {
+        btnCopyID.textContent = original;
+        btnCopyID.disabled = false;
+    }, 1200);
+});
+
+//home title listener
+titleText.addEventListener('click', () => {
+    window.location.reload();
+});
+
 //sending candidate message to server
 function onIceCandidate(event) {
     if (event.candidate) {
@@ -91,9 +110,25 @@ socket.on('created', room => {
     mainGrid.classList.add('hidden');
     callGrid.classList.remove('hidden');
     roomNumber = room;
-    modalText.innerHTML = `<h2>Here is your new room ID:</h2>
-    <h1>${room}</h1>
-    <h2>You can share the ID with your peers 😊</h2>`;
+    modalText.setHTML(`
+    <h1 style="margin-bottom:2rem;
+    text-align:center;">
+    Your roomID is:</h1>
+    <p style="margin-bottom:2rem; 
+    font-weight: 700; 
+    font-family: 'Tahoma', sans-serif; 
+    font-size: 1.5rem; 
+    background-color: #000; 
+    color: #fff;
+    border-radius: 3rem;
+    padding: 0.5rem;
+    text-align: center;">
+    
+    ${room}</p>
+    <p style="margin-bottom:2rem;
+    font-size: 1.2rem;
+    text-align: center;
+    ">You can share the ID with your peers 😊</p>`);
 
     openModal();
 
@@ -224,8 +259,10 @@ socket.on('candidate', event => {
 });
 
 socket.on('roomnotfound', room => {
-    modalText.innerHTML = `<h1>Couldn't find room!</h1>
-    <p>There is no room with the specified ID. 
-    Please recheck the ID provided or create a new room.</p>`;
+    modalText.setHTML(`
+        <h1 style="margin-bottom:2rem">Couldn't find room!</h1>
+        <p font-size: 1.2rem; style="margin-bottom:2rem">There is no room with the specified ID.
+        Please recheck the ID provided or create a new room.</p>
+    `);
     openModal();
 });
