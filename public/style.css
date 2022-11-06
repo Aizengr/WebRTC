@@ -1,18 +1,18 @@
 * {
     margin: 0;
     padding: 0;
-    box-sizing: inherit;
+    box-sizing: content-box;
 }
 
 html {
     /* To make use of full height of page*/
-    min-height: 100%;
+    max-height: 100%;
     margin: 0;
 }
 body {
-    min-height: 100%;
+    max-height: 100%;
     margin: 0;
-    font-family: 'Nunito', sans-serif;
+    font-family: 'Tahoma', sans-serif;
 }
 
 h2,
@@ -99,10 +99,11 @@ label {
 
 .modal {
     position: absolute;
+    line-height: 1;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 70%;
+    width: 40%;
     background-color: white;
     padding: 6rem;
     border-radius: 5px;
@@ -120,26 +121,12 @@ label {
     backdrop-filter: blur(3px);
     z-index: 5;
 }
-
-.video-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 0.5em;
-    grid-auto-flow: row;
-    border: solid #000;
-}
-
-.video-grid-item {
-    background-color: #353434;
-    border: solid rgb(255, 0, 0);
-}
-
 .call-ui-grid {
-    display: grid;
     height: 100vh;
+    width: 100vw;
+    display: grid;
     grid-template-columns: 3fr 1fr;
-    grid-template-rows: 0.5fr 9fr;
+    grid-template-rows: 5% 95%;
 }
 .call-ui-grid-item1 {
     border: #000 solid;
@@ -148,11 +135,26 @@ label {
     text-align: center;
     border: #000 solid;
 }
-/* .call-ui-grid-item3 {
-} */
+.call-ui-grid-item3 {
+}
 .call-ui-grid-item4 {
     text-align: center;
     border: #000 solid;
+}
+
+.video-grid {
+    justify-content: center;
+    display: grid;
+    row-gap: 0.1rem;
+    padding: 0.1rem;
+    grid-template-columns: 60%;
+    grid-template-rows: 50% 50%;
+    grid-auto-flow: row;
+    border: solid #000;
+}
+
+.video-grid-item {
+    background-color: #353434;
 }
 
 .chat {
@@ -163,6 +165,8 @@ label {
     display: none;
 }
 
-.video {
-    object-fit: cover;
+video {
+    object-fit: fill;
+    width: 100%;
+    height: 100%;
 }

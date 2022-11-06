@@ -6,6 +6,7 @@ const { CLIENT_RENEG_LIMIT } = require('tls');
 const app = express();
 let http = require('http').Server(app);
 let io = require('socket.io')(http);
+app.set('view engine', 'ejs');
 
 //static hosting using express
 app.use(express.static('public'));

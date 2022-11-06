@@ -91,9 +91,9 @@ socket.on('created', room => {
     mainGrid.classList.add('hidden');
     callGrid.classList.remove('hidden');
     roomNumber = room;
-    modalText.innerHTML = `<h1>Here is your new room ID:</h1>
-    <h2>${room}</h2>
-    <p>You can share the ID with your peers 😊</p>`;
+    modalText.innerHTML = `<h2>Here is your new room ID:</h2>
+    <h1>${room}</h1>
+    <h2>You can share the ID with your peers 😊</h2>`;
 
     openModal();
 
@@ -226,7 +226,6 @@ socket.on('candidate', event => {
 socket.on('roomnotfound', room => {
     modalText.innerHTML = `<h1>Couldn't find room!</h1>
     <p>There is no room with the specified ID. 
-    
-    Please recheck the ID provided or create a new room.`;
+    Please recheck the ID provided or create a new room.</p>`;
     openModal();
 });
