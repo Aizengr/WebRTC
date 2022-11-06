@@ -23,6 +23,7 @@ label {
 }
 
 .roomNumber {
+    text-align: center;
     margin-bottom: 1rem;
     border-radius: 0.3rem;
     width: 70%;
@@ -120,27 +121,48 @@ label {
     z-index: 5;
 }
 
-.conferenceRoom {
+.video-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1em;
-    grid-auto-flow: column;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 0.5em;
+    grid-auto-flow: row;
     border: solid #000;
 }
 
-.con-grid-item {
-    border: solid #000;
+.video-grid-item {
+    background-color: #353434;
+    border: solid rgb(255, 0, 0);
+}
+
+.call-ui-grid {
+    display: grid;
+    height: 100vh;
+    grid-template-columns: 3fr 1fr;
+    grid-template-rows: 0.5fr 9fr;
+}
+.call-ui-grid-item1 {
+    border: #000 solid;
+}
+.call-ui-grid-item2 {
+    text-align: center;
+    border: #000 solid;
+}
+.call-ui-grid-item3 {
+}
+.call-ui-grid-item4 {
+    text-align: center;
+    border: #000 solid;
 }
 
 .chat {
-    width: 30%;
     border: solid #000;
-}
-
-.call-flexbox {
-    display: flex;
 }
 
 .hidden {
     display: none;
+}
+
+.video {
+    object-fit: cover;
 }
