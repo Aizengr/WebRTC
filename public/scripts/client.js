@@ -26,6 +26,7 @@ function createRemoteVideo() {
     let video = document.createElement('video');
     video.classList.add('remote', 'video-grid-item');
     video.setAttribute('autoplay', true);
+    videoGrid.append(video);
     allVideos = document.querySelectorAll('video');
     updateVideoGrid();
     return video;
@@ -33,6 +34,17 @@ function createRemoteVideo() {
 
 function updateVideoGrid() {
     let itemNumber = allVideos.length;
+    console.log(itemNumber);
+
+    if (itemNumber === 2) {
+        videoGrid.style.gridTemplateRows = '1fr 1fr';
+        allVideos.forEach(video => {
+            video.style.width = '720px';
+            video.style.height = '480px';
+        });
+    } else if (itemNumber === 3) {
+    } else if (itemNumber > 3) {
+    }
 }
 
 //GLOBAL
@@ -68,7 +80,7 @@ const closeModal = () => {
 };
 
 const changeModalSuccess = () => {
-    modalText.setHTML(`
+    modalText.innerHTML = `
     <h1 style="margin-bottom:2rem;
     text-align:center;">
     Your roomID is:</h1>
@@ -78,7 +90,7 @@ const changeModalSuccess = () => {
     font-size: 1.5rem; 
     background-color: #000; 
     color: #fff;
-    border-radius: 3rem;
+    border-radius: 1.5rem;
     padding: 0.5rem;
     text-align: center;">
     
@@ -86,15 +98,15 @@ const changeModalSuccess = () => {
     <p style="margin-bottom:2rem;
     font-size: 1.2rem;
     text-align: center;
-    ">You can share the ID with your peers 😊</p>`);
+    ">You can share the ID with your peers 😊</p>`;
 };
 
 const changeModalFailed = () => {
-    modalText.setHTML(`
+    modalText.innerHTML = `
         <h1 style="margin-bottom:2rem">Couldn't find room!</h1>
         <p font-size: 1.2rem; style="margin-bottom:2rem">There is no room with the specified ID.
         Please recheck the ID provided or create a new room.</p>
-    `);
+    `;
 };
 
 //listener for room button
@@ -206,7 +218,6 @@ socket.on('ready', () => {
         rtcPeerConnection.addEventListener('track', event => {
             const [remoteStream] = event.streams;
             newRemoteVideo.srcObject = remoteStream;
-            videoGrid.append(newRemoteVideo);
             console.log('src added');
         });
 
@@ -244,7 +255,6 @@ socket.on('offer', sessionDesc => {
         rtcPeerConnection.addEventListener('track', async event => {
             const [remoteStream] = event.streams;
             newRemoteVideo.srcObject = remoteStream;
-            videoGrid.append(newRemoteVideo);
             console.log('src added');
         });
 

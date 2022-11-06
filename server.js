@@ -13,6 +13,8 @@ app.use(express.static('public'));
 
 //signal handlers
 io.on('connection', socket => {
+    console.log('connection');
+
     socket.on('create', () => {
         let roomID = uuidv4();
         socket.join(roomID);
