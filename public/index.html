@@ -22,7 +22,12 @@
 
             <div class="main-grid-item3" id="selectRoom">
                 <h2>Paste roomID to join existing room.</h2>
-                <input class="room-number-input" id="roomNumber" type="text" />
+                <input
+                    class="room-number-input"
+                    autocomplete="off"
+                    id="roomNumber"
+                    type="text"
+                />
                 <div></div>
                 <button class="btn" id="goRoom" type="submit">Join</button>
             </div>
@@ -37,11 +42,6 @@
             </div>
             <div class="video-grid call-ui-grid-item2" id="video-grid">
                 <video class="video-grid-item" id="localVideo" autoplay></video>
-                <video
-                    class="video-grid-item hidden"
-                    id="remoteVideo"
-                    autoplay
-                ></video>
             </div>
 
             <div class="chat call-ui-grid-item3">Chat</div>

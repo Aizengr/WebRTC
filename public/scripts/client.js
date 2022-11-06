@@ -5,7 +5,6 @@ const divSelectRoom = document.getElementById('selectRoom');
 const inputRoomNumber = document.getElementById('roomNumber');
 const btnGoRoom = document.getElementById('goRoom');
 const localVideo = document.getElementById('localVideo');
-const remoteVideo = document.getElementById('remoteVideo');
 const btnGenerateRoom = document.getElementById('generateRoom');
 const modalroomID = document.getElementById('roomID');
 const modalText = document.getElementById('modalText');
@@ -15,9 +14,27 @@ const btnCopyID = document.getElementById('copyID');
 
 const mainGrid = document.querySelector('.main-grid');
 const callGrid = document.querySelector('.call-ui-grid');
+const videoGrid = document.querySelector('.video-grid');
+
 const modal = document.querySelector('.modal');
 const overlay = document.querySelector('.overlay');
 const titleText = document.querySelector('.title');
+
+let allVideos;
+
+function createRemoteVideo() {
+    let video = document.createElement('video');
+    video.classList.add('remote', 'video-grid-item');
+    video.setAttribute('autoplay', true);
+    allVideos = document.querySelectorAll('video');
+    updateVideoGrid();
+    return video;
+}
+
+function updateVideoGrid() {
+    let itemNumber = allVideos.length;
+}
+
 //GLOBAL
 
 let roomNumber;
@@ -184,10 +201,12 @@ socket.on('ready', () => {
 
         //adds event listeners to the newly created object above
         rtcPeerConnection.onicecandidate = onIceCandidate;
-        rtcPeerConnection.addEventListener('track', async event => {
+
+        let newRemoteVideo = createRemoteVideo();
+        rtcPeerConnection.addEventListener('track', event => {
             const [remoteStream] = event.streams;
-            console.log(remoteStream);
-            remoteVideo.srcObject = remoteStream;
+            newRemoteVideo.srcObject = remoteStream;
+            videoGrid.append(newRemoteVideo);
             console.log('src added');
         });
 
@@ -221,10 +240,11 @@ socket.on('offer', sessionDesc => {
 
         //adds event listeners to the newly created object above
         rtcPeerConnection.onicecandidate = onIceCandidate;
+        let newRemoteVideo = createRemoteVideo();
         rtcPeerConnection.addEventListener('track', async event => {
             const [remoteStream] = event.streams;
-            console.log(remoteStream);
-            remoteVideo.srcObject = remoteStream;
+            newRemoteVideo.srcObject = remoteStream;
+            videoGrid.append(newRemoteVideo);
             console.log('src added');
         });
 

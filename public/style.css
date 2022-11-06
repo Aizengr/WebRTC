@@ -27,7 +27,7 @@ label {
     margin-bottom: 1rem;
     border-radius: 0.3rem;
     width: 70%;
-    height: 20px;
+    height: 1.5rem;
     box-sizing: border-box;
     background-color: rgb(212, 212, 212);
 }
@@ -137,7 +137,6 @@ label {
 }
 .call-ui-grid-item1 {
     display: flex;
-    border: #000 solid;
     grid-column-start: 1;
     grid-column-end: span 2;
     justify-content: space-between;
@@ -158,23 +157,20 @@ label {
     justify-self: center;
     margin-right: 3rem;
 }
-
-.call-ui-grid-item2 {
-    text-align: center;
-    border: #000 solid;
-}
 .call-ui-grid-item3 {
     text-align: center;
     border: #000 solid;
 }
 
 .video-grid {
+    height: 100%;
+    width: 100%;
     justify-content: center;
     display: grid;
     row-gap: 0.1rem;
     padding: 0.1rem;
     grid-template-columns: 1fr;
-    /* grid-template-rows: */
+    grid-template-rows: 1fr;
     grid-auto-flow: row;
     border: solid #000;
 }
@@ -192,7 +188,7 @@ label {
 }
 
 video {
-    object-fit: cover;
+    object-fit: fill;
     width: 100%;
     height: 100%;
     border-radius: 0.4rem;
