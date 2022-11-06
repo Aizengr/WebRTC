@@ -50,6 +50,36 @@ const closeModal = () => {
     overlay.classList.add('hidden');
 };
 
+const changeModalSuccess = () => {
+    modalText.setHTML(`
+    <h1 style="margin-bottom:2rem;
+    text-align:center;">
+    Your roomID is:</h1>
+    <p style="margin-bottom:2rem; 
+    font-weight: 700; 
+    font-family: 'Tahoma', sans-serif; 
+    font-size: 1.5rem; 
+    background-color: #000; 
+    color: #fff;
+    border-radius: 3rem;
+    padding: 0.5rem;
+    text-align: center;">
+    
+    ${roomNumber}</p>
+    <p style="margin-bottom:2rem;
+    font-size: 1.2rem;
+    text-align: center;
+    ">You can share the ID with your peers 😊</p>`);
+};
+
+const changeModalFailed = () => {
+    modalText.setHTML(`
+        <h1 style="margin-bottom:2rem">Couldn't find room!</h1>
+        <p font-size: 1.2rem; style="margin-bottom:2rem">There is no room with the specified ID.
+        Please recheck the ID provided or create a new room.</p>
+    `);
+};
+
 //listener for room button
 btnGoRoom.addEventListener('click', e => {
     roomNumber = inputRoomNumber.value;
@@ -110,26 +140,7 @@ socket.on('created', room => {
     mainGrid.classList.add('hidden');
     callGrid.classList.remove('hidden');
     roomNumber = room;
-    modalText.setHTML(`
-    <h1 style="margin-bottom:2rem;
-    text-align:center;">
-    Your roomID is:</h1>
-    <p style="margin-bottom:2rem; 
-    font-weight: 700; 
-    font-family: 'Tahoma', sans-serif; 
-    font-size: 1.5rem; 
-    background-color: #000; 
-    color: #fff;
-    border-radius: 3rem;
-    padding: 0.5rem;
-    text-align: center;">
-    
-    ${room}</p>
-    <p style="margin-bottom:2rem;
-    font-size: 1.2rem;
-    text-align: center;
-    ">You can share the ID with your peers 😊</p>`);
-
+    changeModalSuccess();
     openModal();
 
     navigator.mediaDevices
@@ -259,10 +270,6 @@ socket.on('candidate', event => {
 });
 
 socket.on('roomnotfound', room => {
-    modalText.setHTML(`
-        <h1 style="margin-bottom:2rem">Couldn't find room!</h1>
-        <p font-size: 1.2rem; style="margin-bottom:2rem">There is no room with the specified ID.
-        Please recheck the ID provided or create a new room.</p>
-    `);
+    changeModalFailed();
     openModal();
 });
