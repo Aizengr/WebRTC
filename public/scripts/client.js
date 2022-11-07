@@ -21,7 +21,7 @@ const modal = document.querySelector('.modal');
 const overlay = document.querySelector('.overlay');
 const titleText = document.querySelector('.title');
 
-let allUsers = [];
+let allRemoteUsernames = [];
 
 //creating new remote video element
 function createRemoteVideo(remoteUsername) {
@@ -37,24 +37,35 @@ function createRemoteVideo(remoteUsername) {
 
 //updating video grid when remote element is removed
 function updateVideoGrid() {
-    let itemNumber = document.querySelectorAll('video').length;
-    console.log(itemNumber);
-
-    if (itemNumber === 2) {
-        videoGrid.style.gridTemplateRows = '1fr 1fr';
-        document.querySelectorAll('video').forEach(video => {
-            video.style.width = '720px';
-            video.style.height = '480px';
+    let items = document.querySelectorAll('.video-grid-item');
+    if (items.length > 15) {
+        videoGrid.style.gridTemplateColumns = '1fr 1fr 1fr 1fr';
+        items.forEach(item => {
+            item.style.width = '80%';
         });
-    } else if (itemNumber === 3) {
-    } else if (itemNumber > 3) {
+    } else if (items.length > 7) {
+        videoGrid.style.gridTemplateColumns = '1fr 1fr 1fr';
+        items.forEach(item => {
+            item.style.width = '100%';
+        });
+    } else if (items.length > 3) {
+        videoGrid.style.gridTemplateColumns = '1fr 1fr';
+        items.forEach(item => {
+            item.style.width = '100%';
+        });
+    } else {
+        videoGrid.style.gridTemplateColumns = '1fr';
+        items.forEach(item => {
+            item.style.width = '100%';
+        });
     }
 }
 
 //GLOBAL variables
 let roomID;
 let localStream;
-let rtcPeerConnection;
+//multiple rtc connections, username/connection key-value pair
+let rtcPeerConnections = new Map();
 let isCaller;
 let username;
 
@@ -189,13 +200,17 @@ window.addEventListener('unload', () => {
 function onIceCandidate(event) {
     if (event.candidate) {
         console.log('sending ice candidate');
-        socket.emit('candidate', {
-            type: 'candidate',
-            label: event.candidate.sdpMLineIndex,
-            id: event.candidate.sdpMid,
-            candidate: event.candidate.candidate,
-            room: roomID,
-        });
+        socket.emit(
+            'candidate',
+            {
+                type: 'candidate',
+                label: event.candidate.sdpMLineIndex,
+                id: event.candidate.sdpMid,
+                candidate: event.candidate.candidate,
+                room: roomID,
+            },
+            username
+        );
     }
 }
 
@@ -235,10 +250,11 @@ socket.on('joined', room => {
 
 //server emits ready
 socket.on('ready', remoteUsername => {
-    if (isCaller) {
-        allUsers.push(remoteUsername); //adding remote username
+    //if he is the caller and hasnt established yet peer connection
+    if (isCaller && !allRemoteUsernames.includes(remoteUsername)) {
+        allRemoteUsernames.push(remoteUsername); //adding remote username
         //creates an RTCPeerConnectoin object
-        rtcPeerConnection = new RTCPeerConnection(iceServers);
+        let rtcPeerConnection = new RTCPeerConnection(iceServers);
 
         //adds current local stream to the object
         localStream.getTracks().forEach(track => {
@@ -276,15 +292,17 @@ socket.on('ready', remoteUsername => {
             .catch(err => {
                 console.log(err);
             });
+        rtcPeerConnections.set(remoteUsername, rtcPeerConnection);
     }
 });
 
 //server emits offer
 socket.on('offer', (sessionDesc, remoteUsername) => {
-    if (!isCaller) {
-        allUsers.push(remoteUsername);
+    //if its not the caller and if it hasnt yet established peer connection
+    if (!isCaller && !allRemoteUsernames.includes(remoteUsername)) {
+        allRemoteUsernames.push(remoteUsername);
         //creates an RTCPeerConnectoin object
-        rtcPeerConnection = new RTCPeerConnection(iceServers);
+        let rtcPeerConnection = new RTCPeerConnection(iceServers);
 
         //adds current local stream to the object
         localStream.getTracks().forEach(track => {
@@ -310,35 +328,45 @@ socket.on('offer', (sessionDesc, remoteUsername) => {
             .createAnswer()
             .then(sessionDesc => {
                 rtcPeerConnection.setLocalDescription(sessionDesc);
-                socket.emit('answer', {
-                    type: 'answer',
-                    sdp: sessionDesc,
-                    room: roomID,
-                });
+                socket.emit(
+                    'answer',
+                    {
+                        type: 'answer',
+                        sdp: sessionDesc,
+                        room: roomID,
+                    },
+                    username
+                );
             })
             .catch(err => {
                 console.log('Error occured when creating answer' + err);
             });
+        rtcPeerConnections.set(remoteUsername, rtcPeerConnection);
     }
 });
 
 //server emits answer
-socket.on('answer', sessionDesc => {
+socket.on('answer', (sessionDesc, remoteUsername) => {
     //stores it as remote desc
-    rtcPeerConnection.setRemoteDescription(
-        new RTCSessionDescription(sessionDesc)
-    );
+    let connection = rtcPeerConnections.get(remoteUsername);
+
+    //ignores answer if peer connection is established already
+
+    connection.setRemoteDescription(new RTCSessionDescription(sessionDesc));
 });
 
 //server emits candidate
-socket.on('candidate', event => {
+socket.on('candidate', (event, remoteUsername) => {
     //creates canditate object
+
+    let connection = rtcPeerConnections.get(remoteUsername);
+
     let candidate = new RTCIceCandidate({
         sdpMLineIndex: event.label,
         candidate: event.candidate,
     });
     //stores candidate
-    rtcPeerConnection.addIceCandidate(candidate);
+    connection.addIceCandidate(candidate);
 });
 
 //server emits room not found

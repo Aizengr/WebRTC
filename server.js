@@ -59,14 +59,6 @@ io.on('connection', socket => {
         }
     });
 
-    socket.on('ready', (room, username) => {
-        socket.broadcast.to(room).emit('ready', username);
-    });
-
-    socket.on('offer', (event, username) => {
-        socket.broadcast.to(event.room).emit('offer', event.sdp, username);
-    });
-
     //disconnect event when any client dc's, informing the rest
     socket.on('disconnect', () => {
         console.log('User disconnected from socket: ' + socket.id);
@@ -83,12 +75,20 @@ io.on('connection', socket => {
 
     //relay only handlers
 
-    socket.on('candidate', event => {
-        socket.broadcast.to(event.room).emit('candidate', event);
+    socket.on('ready', (room, username) => {
+        socket.broadcast.to(room).emit('ready', username);
     });
 
-    socket.on('answer', event => {
-        socket.broadcast.to(event.room).emit('answer', event.sdp);
+    socket.on('offer', (event, username) => {
+        socket.broadcast.to(event.room).emit('offer', event.sdp, username);
+    });
+
+    socket.on('candidate', (event, username) => {
+        socket.broadcast.to(event.room).emit('candidate', event, username);
+    });
+
+    socket.on('answer', (event, username) => {
+        socket.broadcast.to(event.room).emit('answer', event.sdp, username);
     });
 });
 
