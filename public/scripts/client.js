@@ -349,7 +349,6 @@ socket.on('roomnotfound', room => {
 
 //handing peer disconnection
 socket.on('peerDisconnected', username => {
-    console.log('yo ' + username);
     document.getElementById(`${username}`).remove();
     updateVideoGrid();
 });
