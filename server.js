@@ -70,15 +70,15 @@ io.on('connection', socket => {
     //disconnect event when any client dc's, informing the rest
     socket.on('disconnect', () => {
         console.log('User disconnected from socket: ' + socket.id);
-
-        let dcedPeer = allClients.filter(client => {
-            console.log('Client: ' + client.socket.id);
-            return client.socket.id === socket.id;
-        });
-
-        socket.broadcast
-            .to(dcedPeer[0].roomID)
-            .emit('peerDisconnected', dcedPeer[0].username);
+        if (allClients.length != 0) {
+            let dcedPeer = allClients.filter(client => {
+                console.log('Client: ' + client.socket.id);
+                return client.socket.id === socket.id;
+            });
+            socket.broadcast
+                .to(dcedPeer[0].roomID)
+                .emit('peerDisconnected', dcedPeer[0].username);
+        }
     });
 
     //relay only handlers
