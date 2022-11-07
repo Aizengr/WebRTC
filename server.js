@@ -1,19 +1,26 @@
 'use strict';
 
+const port = 3000;
+let fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const express = require('express');
 const { CLIENT_RENEG_LIMIT } = require('tls');
 const app = express();
-let http = require('http').Server(app);
-let io = require('socket.io')(http);
-app.set('view engine', 'ejs');
+
+const httpsOptions = {
+    key: fs.readFileSync('./backend/security/cert.key'),
+    cert: fs.readFileSync('./backend/security/cert.pem'),
+};
+
+let https = require('https').Server(httpsOptions, app);
+let io = require('socket.io')(https);
 
 //static hosting using express
 app.use(express.static('public'));
 
 //signal handlers
 io.on('connection', socket => {
-    console.log('connection');
+    console.log('Received connection');
 
     socket.on('create', () => {
         let roomID = uuidv4();
@@ -54,6 +61,6 @@ io.on('connection', socket => {
     });
 });
 
-http.listen(3000, () => {
-    console.log('listening on:3000');
+https.listen(port, () => {
+    console.log(`Server running at port: ${port}`);
 });
