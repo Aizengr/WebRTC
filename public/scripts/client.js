@@ -250,8 +250,8 @@ socket.on('joined', room => {
 
 //server emits ready
 socket.on('ready', remoteUsername => {
-    //if he is the caller and hasnt established yet peer connection
-    if (isCaller && !allRemoteUsernames.includes(remoteUsername)) {
+    //if he hasnt established peer connection yet
+    if (!allRemoteUsernames.includes(remoteUsername)) {
         allRemoteUsernames.push(remoteUsername); //adding remote username
         //creates an RTCPeerConnectoin object
         let rtcPeerConnection = new RTCPeerConnection(iceServers);
@@ -298,8 +298,8 @@ socket.on('ready', remoteUsername => {
 
 //server emits offer
 socket.on('offer', (sessionDesc, remoteUsername) => {
-    //if its not the caller and if it hasnt yet established peer connection
-    if (!isCaller && !allRemoteUsernames.includes(remoteUsername)) {
+    //if it hasnt yet established peer connection
+    if (!allRemoteUsernames.includes(remoteUsername)) {
         allRemoteUsernames.push(remoteUsername);
         //creates an RTCPeerConnectoin object
         let rtcPeerConnection = new RTCPeerConnection(iceServers);
@@ -379,4 +379,5 @@ socket.on('roomnotfound', room => {
 socket.on('peerDisconnected', username => {
     document.getElementById(`${username}`).remove();
     updateVideoGrid();
+    allRemoteUsernames.splice(allRemoteUsernames.indexOf(username), 1);
 });

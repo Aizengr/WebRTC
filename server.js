@@ -71,6 +71,8 @@ io.on('connection', socket => {
                 .to(dcedPeer[0].roomID)
                 .emit('peerDisconnected', dcedPeer[0].username);
         }
+        //removing disconnected peer
+        allClients.splice(allClients.indexOf(dcedPeer), 1);
     });
 
     //relay only handlers
