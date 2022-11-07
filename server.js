@@ -7,6 +7,8 @@ const express = require('express');
 const { CLIENT_RENEG_LIMIT } = require('tls');
 const app = express();
 
+const allClients = [];
+
 const httpsOptions = {
     key: fs.readFileSync('./backend/security/cert.key'),
     cert: fs.readFileSync('./backend/security/cert.pem'),
@@ -26,6 +28,7 @@ io.on('connection', socket => {
         let roomID = uuidv4();
         socket.join(roomID);
         socket.emit('created', roomID);
+        allClients.push(socket);
     });
 
     socket.on('join', room => {
@@ -37,10 +40,18 @@ io.on('connection', socket => {
             //if room exists
             socket.join(room);
             socket.emit('joined', room);
+            allClients.push(socket);
         } else {
             //if room does not exist
             socket.emit('roomnotfound', room);
         }
+    });
+
+    //disconnecting event when any client dc's, informing the rest
+    socket.on('disconnecting', () => {
+        allClients.forEach(socket => {
+            socket.emit('peerDisconnected');
+        });
     });
 
     //relay only handlers
@@ -59,6 +70,13 @@ io.on('connection', socket => {
     socket.on('answer', event => {
         socket.broadcast.to(event.room).emit('answer', event.sdp);
     });
+});
+
+app.use((req, res, next) => {
+    if (req.headers['x-forwarded-proto'] !== 'https')
+        // the statement for performing our redirection
+        return res.redirect('https://' + req.headers.host + req.url);
+    else return next();
 });
 
 https.listen(port, () => {

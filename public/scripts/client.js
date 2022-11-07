@@ -150,6 +150,11 @@ titleText.addEventListener('click', () => {
     window.location.reload();
 });
 
+//disconnecting with closing tab, emiting closed to the server
+window.addEventListener('unload', () => {
+    socket.emit('disconnect');
+});
+
 //sending candidate message to server
 function onIceCandidate(event) {
     if (event.candidate) {
@@ -302,4 +307,12 @@ socket.on('candidate', event => {
 socket.on('roomnotfound', room => {
     changeModalFailed();
     openModal();
+});
+
+//receiving closed emit from server
+socket.on('peerDisconnected', reason => {
+    console.log(reason);
+    allVideos[allVideos.length - 1].remove();
+    allVideos = document.querySelectorAll('video');
+    updateVideoGrid();
 });
