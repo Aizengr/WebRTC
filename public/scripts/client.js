@@ -2,15 +2,16 @@
 
 //html elements
 const divSelectRoom = document.getElementById('selectRoom');
-const inputRoomNumber = document.getElementById('roomNumber');
+const inputroomID = document.getElementById('roomID');
 const btnGoRoom = document.getElementById('goRoom');
 const localVideo = document.getElementById('localVideo');
 const btnGenerateRoom = document.getElementById('generateRoom');
-const modalroomID = document.getElementById('roomID');
 const modalText = document.getElementById('modalText');
 const btnCloseModal = document.getElementById('gotRoomID');
 const divNewRoom = document.getElementById('newRoom');
 const btnCopyID = document.getElementById('copyID');
+const inputUsername = document.getElementById('username');
+const textUsernameError = document.getElementById('usernameError');
 
 const mainGrid = document.querySelector('.main-grid');
 const callGrid = document.querySelector('.call-ui-grid');
@@ -20,25 +21,28 @@ const modal = document.querySelector('.modal');
 const overlay = document.querySelector('.overlay');
 const titleText = document.querySelector('.title');
 
-let allVideos;
+let allUsers = [];
 
-function createRemoteVideo() {
+//creating new remote video element
+function createRemoteVideo(remoteUsername) {
     let video = document.createElement('video');
     video.classList.add('remote', 'video-grid-item');
+    video.setAttribute('id', `${remoteUsername}`);
     video.setAttribute('autoplay', true);
     videoGrid.append(video);
-    allVideos = document.querySelectorAll('video');
     updateVideoGrid();
+
     return video;
 }
 
+//updating video grid when remote element is removed
 function updateVideoGrid() {
-    let itemNumber = allVideos.length;
+    let itemNumber = document.querySelectorAll('video').length;
     console.log(itemNumber);
 
     if (itemNumber === 2) {
         videoGrid.style.gridTemplateRows = '1fr 1fr';
-        allVideos.forEach(video => {
+        document.querySelectorAll('video').forEach(video => {
             video.style.width = '720px';
             video.style.height = '480px';
         });
@@ -47,15 +51,14 @@ function updateVideoGrid() {
     }
 }
 
-//GLOBAL
-
-let roomNumber;
+//GLOBAL variables
+let roomID;
 let localStream;
 let rtcPeerConnection;
 let isCaller;
+let username;
 
 //STUN SERVERS
-
 const iceServers = {
     iceServers: [
         { url: 'stun:stun.services.mozzila.com' },
@@ -79,6 +82,12 @@ const closeModal = () => {
     overlay.classList.add('hidden');
 };
 
+const changeLayout = () => {
+    mainGrid.classList.add('hidden');
+    callGrid.classList.remove('hidden');
+};
+
+//changing modal content dynamically
 const changeModalSuccess = () => {
     modalText.innerHTML = `
     <h1 style="margin-bottom:2rem;
@@ -94,7 +103,7 @@ const changeModalSuccess = () => {
     padding: 0.5rem;
     text-align: center;">
     
-    ${roomNumber}</p>
+    ${roomID}</p>
     <p style="margin-bottom:2rem;
     font-size: 1.2rem;
     text-align: center;
@@ -109,15 +118,36 @@ const changeModalFailed = () => {
     `;
 };
 
+//username validation
+const usernameIsValid = () => {
+    if (inputUsername.value.length < 4 || inputUsername.value.length > 16) {
+        textUsernameError.textContent = `Username should be 4-16 character long. Please pick another username.`;
+        return false;
+    }
+    username = inputUsername.value;
+    return true;
+};
+
+//putting a limit to ID length
+const idIsValid = () => {
+    console.log(typeof roomID);
+
+    return roomID.length > 36 ? false : true;
+};
+
 //listener for room button
 btnGoRoom.addEventListener('click', e => {
-    roomNumber = inputRoomNumber.value;
-    socket.emit('join', roomNumber);
+    roomID = inputroomID.value;
+    if (usernameIsValid() && idIsValid()) {
+        socket.emit('join', roomID, username);
+    }
 });
 
 //listener for room creation
 btnGenerateRoom.addEventListener('click', event => {
-    socket.emit('create');
+    if (usernameIsValid()) {
+        socket.emit('create', username);
+    }
 });
 
 //listener for closing modal window
@@ -136,7 +166,7 @@ document.addEventListener('keydown', e => {
 //copy ID button listener
 btnCopyID.addEventListener('click', () => {
     btnCopyID.disabled = true;
-    navigator.clipboard.writeText(roomNumber);
+    navigator.clipboard.writeText(roomID);
     let original = btnCopyID.textContent;
     btnCopyID.textContent = 'Copied ☑️';
     setTimeout(() => {
@@ -164,16 +194,15 @@ function onIceCandidate(event) {
             label: event.candidate.sdpMLineIndex,
             id: event.candidate.sdpMid,
             candidate: event.candidate.candidate,
-            room: roomNumber,
+            room: roomID,
         });
     }
 }
 
 //server emits created
 socket.on('created', room => {
-    mainGrid.classList.add('hidden');
-    callGrid.classList.remove('hidden');
-    roomNumber = room;
+    roomID = room;
+    changeLayout();
     changeModalSuccess();
     openModal();
 
@@ -191,14 +220,13 @@ socket.on('created', room => {
 
 //server emits joined
 socket.on('joined', room => {
-    mainGrid.classList.add('hidden');
-    callGrid.classList.remove('hidden');
+    changeLayout();
     navigator.mediaDevices
         .getUserMedia(streamConstraints)
         .then(stream => {
             localStream = stream;
             localVideo.srcObject = stream;
-            socket.emit('ready', roomNumber); //sends ready to the server
+            socket.emit('ready', roomID, username); //sends ready to the server
         })
         .catch(err => {
             console.log('An error occured when accessing media devices ' + err);
@@ -206,8 +234,9 @@ socket.on('joined', room => {
 });
 
 //server emits ready
-socket.on('ready', () => {
+socket.on('ready', remoteUsername => {
     if (isCaller) {
+        allUsers.push(remoteUsername); //adding remote username
         //creates an RTCPeerConnectoin object
         rtcPeerConnection = new RTCPeerConnection(iceServers);
 
@@ -219,23 +248,30 @@ socket.on('ready', () => {
         //adds event listeners to the newly created object above
         rtcPeerConnection.onicecandidate = onIceCandidate;
 
-        let newRemoteVideo = createRemoteVideo();
+        //creates remote video element
+        let newRemoteVideo = createRemoteVideo(remoteUsername);
+
+        //adding track event listener to get stream
         rtcPeerConnection.addEventListener('track', event => {
             const [remoteStream] = event.streams;
             newRemoteVideo.srcObject = remoteStream;
             console.log('src added');
         });
 
-        //prepares an Offer
+        //prepares an offer and sends offer
         rtcPeerConnection
             .createOffer()
             .then(sessionDesc => {
                 rtcPeerConnection.setLocalDescription(sessionDesc);
-                socket.emit('offer', {
-                    type: 'offer',
-                    sdp: sessionDesc,
-                    room: roomNumber,
-                });
+                socket.emit(
+                    'offer',
+                    {
+                        type: 'offer',
+                        sdp: sessionDesc,
+                        room: roomID,
+                    },
+                    username
+                );
             })
             .catch(err => {
                 console.log(err);
@@ -244,8 +280,9 @@ socket.on('ready', () => {
 });
 
 //server emits offer
-socket.on('offer', sessionDesc => {
+socket.on('offer', (sessionDesc, remoteUsername) => {
     if (!isCaller) {
+        allUsers.push(remoteUsername);
         //creates an RTCPeerConnectoin object
         rtcPeerConnection = new RTCPeerConnection(iceServers);
 
@@ -256,7 +293,7 @@ socket.on('offer', sessionDesc => {
 
         //adds event listeners to the newly created object above
         rtcPeerConnection.onicecandidate = onIceCandidate;
-        let newRemoteVideo = createRemoteVideo();
+        let newRemoteVideo = createRemoteVideo(remoteUsername);
         rtcPeerConnection.addEventListener('track', async event => {
             const [remoteStream] = event.streams;
             newRemoteVideo.srcObject = remoteStream;
@@ -276,7 +313,7 @@ socket.on('offer', sessionDesc => {
                 socket.emit('answer', {
                     type: 'answer',
                     sdp: sessionDesc,
-                    room: roomNumber,
+                    room: roomID,
                 });
             })
             .catch(err => {
@@ -304,15 +341,15 @@ socket.on('candidate', event => {
     rtcPeerConnection.addIceCandidate(candidate);
 });
 
+//server emits room not found
 socket.on('roomnotfound', room => {
     changeModalFailed();
     openModal();
 });
 
-//receiving closed emit from server
-socket.on('peerDisconnected', reason => {
-    console.log(reason);
-    allVideos[allVideos.length - 1].remove();
-    allVideos = document.querySelectorAll('video');
+//handing peer disconnection
+socket.on('peerDisconnected', username => {
+    console.log('yo ' + username);
+    document.getElementById(`${username}`).remove();
     updateVideoGrid();
 });

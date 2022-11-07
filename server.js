@@ -5,8 +5,10 @@ let fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const express = require('express');
 const { CLIENT_RENEG_LIMIT } = require('tls');
+const { REPL_MODE_SLOPPY } = require('repl');
 const app = express();
 
+//keeping all client objects
 const allClients = [];
 
 const httpsOptions = {
@@ -23,60 +25,71 @@ app.use(express.static('public'));
 //signal handlers
 io.on('connection', socket => {
     console.log('Received connection');
-
-    socket.on('create', () => {
+    socket.on('create', username => {
         let roomID = uuidv4();
         socket.join(roomID);
         socket.emit('created', roomID);
-        allClients.push(socket);
+
+        let client = {
+            username: username,
+            socket: socket,
+            roomID: roomID,
+        };
+        allClients.push(client);
     });
 
-    socket.on('join', room => {
-        console.log(room);
+    socket.on('join', (room, username) => {
+        console.log(room, username);
 
         //count number of users on room (may be undefined)
         let myRoom = io.sockets.adapter.rooms.get(room);
         if (myRoom) {
             //if room exists
+            let client = {
+                username: username,
+                socket: socket,
+                roomID: room,
+            };
             socket.join(room);
             socket.emit('joined', room);
-            allClients.push(socket);
+            allClients.push(client);
         } else {
             //if room does not exist
             socket.emit('roomnotfound', room);
         }
     });
 
-    //disconnecting event when any client dc's, informing the rest
-    socket.on('disconnecting', () => {
-        allClients.forEach(socket => {
-            socket.emit('peerDisconnected');
+    socket.on('ready', (room, username) => {
+        socket.broadcast.to(room).emit('ready', username);
+    });
+
+    socket.on('offer', (event, username) => {
+        socket.broadcast.to(event.room).emit('offer', event.sdp, username);
+    });
+
+    //disconnect event when any client dc's, informing the rest
+    socket.on('disconnect', () => {
+        console.log('User disconnected from socket: ' + socket.id);
+
+        let dcedPeer = allClients.filter(client => {
+            console.log('Client: ' + client.socket.id);
+            return client.socket.id === socket.id;
         });
+
+        socket.broadcast
+            .to(dcedPeer[0].roomID)
+            .emit('peerDisconnected', dcedPeer[0].username);
     });
 
     //relay only handlers
-    socket.on('ready', room => {
-        socket.broadcast.to(room).emit('ready');
-    });
 
     socket.on('candidate', event => {
         socket.broadcast.to(event.room).emit('candidate', event);
     });
 
-    socket.on('offer', event => {
-        socket.broadcast.to(event.room).emit('offer', event.sdp);
-    });
-
     socket.on('answer', event => {
         socket.broadcast.to(event.room).emit('answer', event.sdp);
     });
-});
-
-app.use((req, res, next) => {
-    if (req.headers['x-forwarded-proto'] !== 'https')
-        // the statement for performing our redirection
-        return res.redirect('https://' + req.headers.host + req.url);
-    else return next();
 });
 
 https.listen(port, () => {
