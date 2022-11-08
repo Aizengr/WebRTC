@@ -375,3 +375,7 @@ socket.on('peerDisconnected', remoteUsername => {
     //removing rtcPeerConnection
     rtcPeerConnections.delete(remoteUsername);
 });
+
+socket.on('usernametaken', () => {
+    textUsernameError.textContent = `Username taken. Please pick another username and re-join the call.`;
+});

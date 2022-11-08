@@ -22,9 +22,26 @@ let io = require('socket.io')(https);
 //static hosting using express
 app.use(express.static('public'));
 
+//checking if username within a room exists
+function usernameCheck(socket, room, username) {
+    console.log(socket.id, room, username);
+
+    let roomClients = allClients.filter(client => client.roomID === room);
+    let result = true;
+    roomClients.forEach(client => {
+        console.log('FOUND -> ' + client.username);
+        if (client.username.toUpperCase() === username.toUpperCase()) {
+            console.log('denied');
+            result = false;
+        }
+    });
+    return result;
+}
+
 //signal handlers
 io.on('connection', socket => {
     socket.on('create', username => {
+        username = username.trim();
         let roomID = uuidv4();
         socket.join(roomID);
         socket.emit('created', roomID);
@@ -47,22 +64,27 @@ io.on('connection', socket => {
         console.log(
             'JOIN REQUEST - Socket: ' + socket.id + ' - Username: ' + username
         );
+        console.log(usernameCheck(socket, room, username));
 
-        //count number of users on room (may be undefined)
-        let myRoom = io.sockets.adapter.rooms.get(room);
-        if (myRoom) {
-            //if room exists
-            let client = {
-                username: username,
-                socket: socket,
-                roomID: room,
-            };
-            socket.join(room);
-            socket.emit('joined', room);
-            allClients.push(client);
+        if (usernameCheck(socket, room, username)) {
+            //if username does not exist
+            let myRoom = io.sockets.adapter.rooms.get(room);
+            if (myRoom) {
+                //if room exists
+                let client = {
+                    username: username,
+                    socket: socket,
+                    roomID: room,
+                };
+                socket.join(room);
+                socket.emit('joined', room);
+                allClients.push(client);
+            } else {
+                //if room does not exist
+                socket.emit('roomnotfound', room);
+            }
         } else {
-            //if room does not exist
-            socket.emit('roomnotfound', room);
+            io.to(socket.id).emit('usernametaken');
         }
     });
 
@@ -72,21 +94,26 @@ io.on('connection', socket => {
         if (allClients.length > 1) {
             //
             let dcedPeer = allClients.filter(client => {
-                console.log('Client: ' + client.socket.id);
+                console.log('All clients => ' + client.socket.id);
                 return client.socket.id === socket.id;
             });
             //emiting dc event
-            if (dcedPeer) {
-                //checking if the peer exists ()
+            if (!dcedPeer === 'undefined') {
+                //avoiding issues with connections made in the middle of server downtime
                 socket
                     .to(dcedPeer[0].roomID)
                     .emit('peerDisconnected', dcedPeer[0].username);
                 //removing disconnected peer
+                console.log('Removing ' + allClients.indexOf(dcedPeer));
+
                 allClients.splice(allClients.indexOf(dcedPeer), 1);
             }
         }
     });
 
+    socket.on('disconnecting', reason => {
+        console.log('Reason ---' + reason);
+    });
     //relay only handlers
     //ready is emmited to the whole room
     socket.on('ready', (room, username) => {
@@ -112,9 +139,7 @@ io.on('connection', socket => {
 });
 
 function findDestSocketID(event) {
-    console.log(event.to);
     let destUser = allClients.filter(client => client.username === event.to);
-    console.log(destUser);
     return destUser[0].socket.id;
 }
 
