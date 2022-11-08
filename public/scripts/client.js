@@ -31,7 +31,6 @@ function createRemoteVideo(remoteUsername) {
     video.setAttribute('autoplay', true);
     videoGrid.append(video);
     updateVideoGrid();
-
     return video;
 }
 
@@ -66,7 +65,6 @@ let roomID;
 let localStream;
 //multiple rtc connections, username/connection key-value pair
 let rtcPeerConnections = new Map();
-let isCaller;
 let username;
 
 //STUN SERVERS
@@ -226,7 +224,6 @@ socket.on('created', room => {
         .then(stream => {
             localStream = stream;
             localVideo.srcObject = stream; //shows stream
-            isCaller = true;
         })
         .catch(err => {
             console.log('An error occured when accessing media devices ' + err);
@@ -250,7 +247,9 @@ socket.on('joined', room => {
 
 //server emits ready
 socket.on('ready', remoteUsername => {
-    //if he hasnt established peer connection yet
+    console.log('GOT READY');
+
+    //if client hasnt established peer connection yet
     if (!allRemoteUsernames.includes(remoteUsername)) {
         allRemoteUsernames.push(remoteUsername); //adding remote username
         //creates an RTCPeerConnectoin object
@@ -298,7 +297,7 @@ socket.on('ready', remoteUsername => {
 
 //server emits offer
 socket.on('offer', (sessionDesc, remoteUsername) => {
-    //if it hasnt yet established peer connection
+    //if client hasnt yet established peer connection
     if (!allRemoteUsernames.includes(remoteUsername)) {
         allRemoteUsernames.push(remoteUsername);
         //creates an RTCPeerConnectoin object
@@ -347,12 +346,15 @@ socket.on('offer', (sessionDesc, remoteUsername) => {
 
 //server emits answer
 socket.on('answer', (sessionDesc, remoteUsername) => {
+    console.log(`Received answer from ${remoteUsername}`);
+
     //stores it as remote desc
     let connection = rtcPeerConnections.get(remoteUsername);
-
-    //ignores answer if peer connection is established already
-
-    connection.setRemoteDescription(new RTCSessionDescription(sessionDesc));
+    if (!connection.currentRemoteDescription) {
+        console.log('Setting RDP');
+        //ignores answer if peer connection is established already
+        connection.setRemoteDescription(new RTCSessionDescription(sessionDesc));
+    }
 });
 
 //server emits candidate
@@ -366,7 +368,14 @@ socket.on('candidate', (event, remoteUsername) => {
         candidate: event.candidate,
     });
     //stores candidate
-    connection.addIceCandidate(candidate);
+    connection
+        .addIceCandidate(candidate)
+        .then(e => {
+            console.log('Added candidate for ' + remoteUsername);
+        })
+        .catch(err => {
+            console.log(err);
+        });
 });
 
 //server emits room not found

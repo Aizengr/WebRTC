@@ -24,7 +24,6 @@ app.use(express.static('public'));
 
 //signal handlers
 io.on('connection', socket => {
-    console.log('Received connection');
     socket.on('create', username => {
         let roomID = uuidv4();
         socket.join(roomID);
@@ -35,11 +34,19 @@ io.on('connection', socket => {
             socket: socket,
             roomID: roomID,
         };
+        console.log(
+            'CREATE REQUEST - Socket: ' +
+                client.socket.id +
+                ' - Username: ' +
+                client.username
+        );
         allClients.push(client);
     });
 
     socket.on('join', (room, username) => {
-        console.log(room, username);
+        console.log(
+            'JOIN REQUEST - Socket: ' + socket.id + ' - Username: ' + username
+        );
 
         //count number of users on room (may be undefined)
         let myRoom = io.sockets.adapter.rooms.get(room);
@@ -67,30 +74,48 @@ io.on('connection', socket => {
                 console.log('Client: ' + client.socket.id);
                 return client.socket.id === socket.id;
             });
-            socket.broadcast
+            socket
                 .to(dcedPeer[0].roomID)
                 .emit('peerDisconnected', dcedPeer[0].username);
+            //removing disconnected peer
+            allClients.splice(allClients.indexOf(dcedPeer), 1);
         }
-        //removing disconnected peer
-        allClients.splice(allClients.indexOf(dcedPeer), 1);
     });
 
     //relay only handlers
 
     socket.on('ready', (room, username) => {
-        socket.broadcast.to(room).emit('ready', username);
+        console.log(
+            'READY REQUEST - Socket: ' + socket.id + ' - Username: ' + username
+        );
+
+        socket.to(room).emit('ready', username);
     });
 
     socket.on('offer', (event, username) => {
-        socket.broadcast.to(event.room).emit('offer', event.sdp, username);
+        console.log(
+            'OFFER REQUEST - Socket: ' + socket.id + ' - Username: ' + username
+        );
+
+        socket.to(event.room).emit('offer', event.sdp, username);
     });
 
     socket.on('candidate', (event, username) => {
-        socket.broadcast.to(event.room).emit('candidate', event, username);
+        console.log(
+            'CANDIDATE REQUEST - Socket: ' +
+                socket.id +
+                ' - Username: ' +
+                username
+        );
+
+        socket.to(event.room).emit('candidate', event, username);
     });
 
     socket.on('answer', (event, username) => {
-        socket.broadcast.to(event.room).emit('answer', event.sdp, username);
+        console.log(
+            'ANSWER REQUEST - Socket: ' + socket.id + ' - Username: ' + username
+        );
+        socket.to(event.room).emit('answer', event.sdp, username);
     });
 });
 
