@@ -15,7 +15,7 @@ const textUsernameError = document.getElementById('usernameError');
 
 const mainGrid = document.querySelector('.main-grid');
 const callGrid = document.querySelector('.call-ui-grid');
-const videoGrid = document.querySelector('.video-grid');
+const flexContainerVideos = document.querySelector('.flex-video-container');
 
 const modal = document.querySelector('.modal');
 const overlay = document.querySelector('.overlay');
@@ -24,38 +24,11 @@ const titleText = document.querySelector('.title');
 //creating new remote video element
 function createRemoteVideo(remoteUsername) {
     let video = document.createElement('video');
-    video.classList.add('remote', 'video-grid-item');
+    video.classList.add('remote', 'flex-video-item');
     video.setAttribute('id', `${remoteUsername}`);
     video.setAttribute('autoplay', true);
-    videoGrid.append(video);
-    updateVideoGrid();
+    flexContainerVideos.append(video);
     return video;
-}
-
-//updating video grid when remote element is removed
-function updateVideoGrid() {
-    let items = document.querySelectorAll('.video-grid-item');
-    if (items.length > 15) {
-        videoGrid.style.gridTemplateColumns = '1fr 1fr 1fr 1fr';
-        items.forEach(item => {
-            item.style.width = '80%';
-        });
-    } else if (items.length > 7) {
-        videoGrid.style.gridTemplateColumns = '1fr 1fr 1fr';
-        items.forEach(item => {
-            item.style.width = '100%';
-        });
-    } else if (items.length > 3) {
-        videoGrid.style.gridTemplateColumns = '1fr 1fr';
-        items.forEach(item => {
-            item.style.width = '100%';
-        });
-    } else {
-        videoGrid.style.gridTemplateColumns = '1fr';
-        items.forEach(item => {
-            item.style.width = '100%';
-        });
-    }
 }
 
 //GLOBAL variables
@@ -399,8 +372,6 @@ socket.on('roomnotfound', room => {
 socket.on('peerDisconnected', remoteUsername => {
     //removing html element
     document.getElementById(`${remoteUsername}`).remove();
-    //updating grid
-    updateVideoGrid();
     //removing rtcPeerConnection
     rtcPeerConnections.delete(remoteUsername);
 });

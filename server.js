@@ -76,11 +76,14 @@ io.on('connection', socket => {
                 return client.socket.id === socket.id;
             });
             //emiting dc event
-            socket
-                .to(dcedPeer[0].roomID)
-                .emit('peerDisconnected', dcedPeer[0].username);
-            //removing disconnected peer
-            allClients.splice(allClients.indexOf(dcedPeer), 1);
+            if (dcedPeer) {
+                //checking if the peer exists ()
+                socket
+                    .to(dcedPeer[0].roomID)
+                    .emit('peerDisconnected', dcedPeer[0].username);
+                //removing disconnected peer
+                allClients.splice(allClients.indexOf(dcedPeer), 1);
+            }
         }
     });
 
