@@ -21,8 +21,6 @@ const modal = document.querySelector('.modal');
 const overlay = document.querySelector('.overlay');
 const titleText = document.querySelector('.title');
 
-let allRemoteUsernames = [];
-
 //creating new remote video element
 function createRemoteVideo(remoteUsername) {
     let video = document.createElement('video');
@@ -72,6 +70,10 @@ const iceServers = {
     iceServers: [
         { url: 'stun:stun.services.mozzila.com' },
         { url: 'stun:stun.l.google.com:19302' },
+        { url: 'stun:stun1.l.google.com:19302' },
+        { url: 'stun:stun2.l.google.com:19302' },
+        { url: 'stun:stun3.l.google.com:19302' },
+        { url: 'stun:stun4.l.google.com:19302' },
     ],
 };
 
@@ -139,8 +141,6 @@ const usernameIsValid = () => {
 
 //putting a limit to ID length
 const idIsValid = () => {
-    console.log(typeof roomID);
-
     return roomID.length > 36 ? false : true;
 };
 
@@ -157,6 +157,10 @@ btnGenerateRoom.addEventListener('click', event => {
     if (usernameIsValid()) {
         socket.emit('create', username);
     }
+});
+
+titleText.addEventListener('click', event => {
+    window.location.reload();
 });
 
 //listener for closing modal window
@@ -184,33 +188,10 @@ btnCopyID.addEventListener('click', () => {
     }, 1200);
 });
 
-//home title listener
-titleText.addEventListener('click', () => {
-    window.location.reload();
-});
-
 //disconnecting with closing tab, emiting closed to the server
 window.addEventListener('unload', () => {
     socket.emit('disconnect');
 });
-
-//sending candidate message to server
-function onIceCandidate(event) {
-    if (event.candidate) {
-        console.log('sending ice candidate');
-        socket.emit(
-            'candidate',
-            {
-                type: 'candidate',
-                label: event.candidate.sdpMLineIndex,
-                id: event.candidate.sdpMid,
-                candidate: event.candidate.candidate,
-                room: roomID,
-            },
-            username
-        );
-    }
-}
 
 //server emits created
 socket.on('created', room => {
@@ -250,8 +231,7 @@ socket.on('ready', remoteUsername => {
     console.log('GOT READY');
 
     //if client hasnt established peer connection yet
-    if (!allRemoteUsernames.includes(remoteUsername)) {
-        allRemoteUsernames.push(remoteUsername); //adding remote username
+    if (!rtcPeerConnections.has(remoteUsername)) {
         //creates an RTCPeerConnectoin object
         let rtcPeerConnection = new RTCPeerConnection(iceServers);
 
@@ -261,7 +241,20 @@ socket.on('ready', remoteUsername => {
         });
 
         //adds event listeners to the newly created object above
-        rtcPeerConnection.onicecandidate = onIceCandidate;
+        rtcPeerConnection.onicecandidate = event => {
+            if (event.candidate) {
+                console.log('Sending ice candidate');
+                socket.emit('candidate', {
+                    type: 'candidate',
+                    label: event.candidate.sdpMLineIndex,
+                    id: event.candidate.sdpMid,
+                    candidate: event.candidate.candidate,
+                    room: roomID,
+                    from: username,
+                    to: remoteUsername,
+                });
+            }
+        };
 
         //creates remote video element
         let newRemoteVideo = createRemoteVideo(remoteUsername);
@@ -278,15 +271,13 @@ socket.on('ready', remoteUsername => {
             .createOffer()
             .then(sessionDesc => {
                 rtcPeerConnection.setLocalDescription(sessionDesc);
-                socket.emit(
-                    'offer',
-                    {
-                        type: 'offer',
-                        sdp: sessionDesc,
-                        room: roomID,
-                    },
-                    username
-                );
+                socket.emit('offer', {
+                    type: 'offer',
+                    sdp: sessionDesc,
+                    room: roomID,
+                    from: username,
+                    to: remoteUsername,
+                });
             })
             .catch(err => {
                 console.log(err);
@@ -298,8 +289,7 @@ socket.on('ready', remoteUsername => {
 //server emits offer
 socket.on('offer', (sessionDesc, remoteUsername) => {
     //if client hasnt yet established peer connection
-    if (!allRemoteUsernames.includes(remoteUsername)) {
-        allRemoteUsernames.push(remoteUsername);
+    if (!rtcPeerConnections.has(remoteUsername)) {
         //creates an RTCPeerConnectoin object
         let rtcPeerConnection = new RTCPeerConnection(iceServers);
 
@@ -309,12 +299,27 @@ socket.on('offer', (sessionDesc, remoteUsername) => {
         });
 
         //adds event listeners to the newly created object above
-        rtcPeerConnection.onicecandidate = onIceCandidate;
+        rtcPeerConnection.onicecandidate = event => {
+            console.log(remoteUsername);
+
+            if (event.candidate) {
+                console.log('Sending ice candidate');
+                socket.emit('candidate', {
+                    type: 'candidate',
+                    label: event.candidate.sdpMLineIndex,
+                    id: event.candidate.sdpMid,
+                    candidate: event.candidate.candidate,
+                    room: roomID,
+                    from: username,
+                    to: remoteUsername,
+                });
+            }
+        };
+
         let newRemoteVideo = createRemoteVideo(remoteUsername);
         rtcPeerConnection.addEventListener('track', async event => {
             const [remoteStream] = event.streams;
             newRemoteVideo.srcObject = remoteStream;
-            console.log('src added');
         });
 
         //stores the offer as a remote description
@@ -327,15 +332,13 @@ socket.on('offer', (sessionDesc, remoteUsername) => {
             .createAnswer()
             .then(sessionDesc => {
                 rtcPeerConnection.setLocalDescription(sessionDesc);
-                socket.emit(
-                    'answer',
-                    {
-                        type: 'answer',
-                        sdp: sessionDesc,
-                        room: roomID,
-                    },
-                    username
-                );
+                socket.emit('answer', {
+                    type: 'answer',
+                    sdp: sessionDesc,
+                    room: roomID,
+                    from: username,
+                    to: remoteUsername,
+                });
             })
             .catch(err => {
                 console.log('Error occured when creating answer' + err);
@@ -353,7 +356,11 @@ socket.on('answer', (sessionDesc, remoteUsername) => {
     if (!connection.currentRemoteDescription) {
         console.log('Setting RDP');
         //ignores answer if peer connection is established already
-        connection.setRemoteDescription(new RTCSessionDescription(sessionDesc));
+        connection
+            .setRemoteDescription(new RTCSessionDescription(sessionDesc))
+            .catch(() => {
+                console.log(remoteUsername);
+            });
     }
 });
 
@@ -361,8 +368,11 @@ socket.on('answer', (sessionDesc, remoteUsername) => {
 socket.on('candidate', (event, remoteUsername) => {
     //creates canditate object
 
+    //setting candidate is the last step for connection
+    //we set candidate only if we haven't already
     let connection = rtcPeerConnections.get(remoteUsername);
 
+    console.log(connection.connectionState);
     let candidate = new RTCIceCandidate({
         sdpMLineIndex: event.label,
         candidate: event.candidate,
@@ -376,6 +386,7 @@ socket.on('candidate', (event, remoteUsername) => {
         .catch(err => {
             console.log(err);
         });
+    console.log(remoteUsername, connection);
 });
 
 //server emits room not found
@@ -385,8 +396,11 @@ socket.on('roomnotfound', room => {
 });
 
 //handing peer disconnection
-socket.on('peerDisconnected', username => {
-    document.getElementById(`${username}`).remove();
+socket.on('peerDisconnected', remoteUsername => {
+    //removing html element
+    document.getElementById(`${remoteUsername}`).remove();
+    //updating grid
     updateVideoGrid();
-    allRemoteUsernames.splice(allRemoteUsernames.indexOf(username), 1);
+    //removing rtcPeerConnection
+    rtcPeerConnections.delete(remoteUsername);
 });

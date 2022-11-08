@@ -69,11 +69,13 @@ io.on('connection', socket => {
     //disconnect event when any client dc's, informing the rest
     socket.on('disconnect', () => {
         console.log('User disconnected from socket: ' + socket.id);
-        if (allClients.length != 0) {
+        if (allClients.length > 1) {
+            //
             let dcedPeer = allClients.filter(client => {
                 console.log('Client: ' + client.socket.id);
                 return client.socket.id === socket.id;
             });
+            //emiting dc event
             socket
                 .to(dcedPeer[0].roomID)
                 .emit('peerDisconnected', dcedPeer[0].username);
@@ -83,41 +85,35 @@ io.on('connection', socket => {
     });
 
     //relay only handlers
-
+    //ready is emmited to the whole room
     socket.on('ready', (room, username) => {
-        console.log(
-            'READY REQUEST - Socket: ' + socket.id + ' - Username: ' + username
-        );
-
         socket.to(room).emit('ready', username);
     });
 
-    socket.on('offer', (event, username) => {
-        console.log(
-            'OFFER REQUEST - Socket: ' + socket.id + ' - Username: ' + username
-        );
-
-        socket.to(event.room).emit('offer', event.sdp, username);
+    socket.on('offer', event => {
+        //finding the exact user for which the offer is send
+        let destSocket = findDestSocketID(event);
+        //sending the offer ONLY to that user
+        io.to(destSocket).emit('offer', event.sdp, event.from);
     });
 
-    socket.on('candidate', (event, username) => {
-        console.log(
-            'CANDIDATE REQUEST - Socket: ' +
-                socket.id +
-                ' - Username: ' +
-                username
-        );
-
-        socket.to(event.room).emit('candidate', event, username);
+    socket.on('candidate', event => {
+        let destSocket = findDestSocketID(event);
+        io.to(destSocket).emit('candidate', event, event.from);
     });
 
-    socket.on('answer', (event, username) => {
-        console.log(
-            'ANSWER REQUEST - Socket: ' + socket.id + ' - Username: ' + username
-        );
-        socket.to(event.room).emit('answer', event.sdp, username);
+    socket.on('answer', event => {
+        let destSocket = findDestSocketID(event);
+        io.to(destSocket).emit('answer', event.sdp, event.from);
     });
 });
+
+function findDestSocketID(event) {
+    console.log(event.to);
+    let destUser = allClients.filter(client => client.username === event.to);
+    console.log(destUser);
+    return destUser[0].socket.id;
+}
 
 https.listen(port, () => {
     console.log(`Server running at port: ${port}`);
