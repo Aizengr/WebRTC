@@ -92,9 +92,9 @@ label {
     row-gap: 2em;
     display: grid;
     grid-template-areas:
-        'title title username'
-        'title title generate'
-        'title title join';
+        'title title title username'
+        'title title title generate'
+        'title title title join';
 }
 
 .main-grid-item1 {
