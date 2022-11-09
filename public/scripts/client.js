@@ -50,8 +50,15 @@ const iceServers = {
     ],
 };
 
-//Stream constraints
-let streamConstraints = { audio: true, video: true };
+//Stream constraints, having min ideal and max values for better performance
+let streamConstraints = {
+    audio: true,
+    video: {
+        facingMode: 'user',
+        width: { min: 1024, ideal: 1280, max: 1920 },
+        height: { min: 576, ideal: 720, max: 1080 },
+    },
+};
 
 //connecting to socket.io server
 const socket = io();

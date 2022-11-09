@@ -52,7 +52,7 @@ label {
     transition: all 0.2s;
     background-color: #161616;
     backdrop-filter: blur(10px);
-    padding: 0.4rem 1rem;
+    padding: 0.3rem 1rem;
     border-radius: 0.5rem;
     box-shadow: 0 5rem 35rem rgba(0, 0, 0, 0.1);
 }
@@ -182,11 +182,8 @@ label {
 
 .call-ui-grid-item1 {
     display: flex;
-    grid-column-start: 1;
-    grid-column-end: span 2;
     justify-content: space-between;
     color: #fff;
-    cursor: pointer;
     grid-area: header;
     border-bottom: #353434 solid 0.1rem;
 }
@@ -195,6 +192,7 @@ label {
     font-family: fantasy;
     font-size: 3rem;
     padding-left: 1rem;
+    cursor: pointer;
 }
 
 .call-ui-grid-item1 .roomID {
@@ -203,6 +201,19 @@ label {
     justify-self: center;
     margin-right: 3rem;
 }
+
+.call-ui-grid-item1 .settings {
+    font-size: 3rem;
+    padding-top: 5px;
+    color: #7a566f;
+    cursor: pointer;
+    transition: transform 4s linear 0s;
+}
+
+.settings:hover {
+    transform: rotate(360deg);
+}
+
 .call-ui-grid-item2 {
     grid-area: main-video;
 }
@@ -215,10 +226,10 @@ label {
 }
 
 .call-ui-grid-item4 {
+    color: aliceblue;
     font-family: inherit;
     text-align: center;
     grid-area: chat;
-    color: #fff;
     border-left: #353434 solid 0.1rem;
     display: flex;
     flex-direction: column;
@@ -234,15 +245,28 @@ label {
 }
 
 .input-area {
+    padding-left: 1rem;
     display: flex;
     gap: 1rem;
     justify-self: end;
     justify-content: center;
+    padding-bottom: 0.8rem;
 }
 
 .message-input {
+    background-color: #b4a5ad;
+    font-weight: 500;
+    font-family: 'Tahoma', sans-serif;
+    font-size: large;
     width: 80%;
-    border-radius: 0.6rem;
+    border-radius: 0.2rem;
+}
+
+.send-button {
+    cursor: pointer;
+    font-size: 1.7rem;
+    padding-right: 1rem;
+    color: #7a566f;
 }
 
 .hidden {
@@ -283,20 +307,4 @@ video {
 
 .flex-video-item:hover {
     transform: scale(1.2) translate(0, -10px);
-}
-
-.call-ui-grid-item3::-webkit-scrollbar {
-    height: 0.8rem;
-}
-
-.call-ui-grid-item3::-webkit-scrollbar-track {
-    box-shadow: inset 0 0 5px rgb(54, 51, 51);
-    border-radius: 10px;
-}
-
-.call-ui-grid-item3::-webkit-scrollbar-thumb {
-    background: rgb(5, 5, 5);
-    border-radius: 10px;
-    border: #353434 2px solid;
-    border-style: ridge;
 }
