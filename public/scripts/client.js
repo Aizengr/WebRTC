@@ -166,6 +166,34 @@ window.addEventListener('unload', () => {
     socket.emit('disconnect');
 });
 
+//scrolling with grab
+let mouseDown = false;
+let startX, scrollLeft;
+
+let startDragging = e => {
+    mouseDown = true;
+    startX = e.pageX - flexContainerVideos.offsetLeft;
+    scrollLeft = flexContainerVideos.scrollLeft;
+};
+
+let stopDragging = event => (mouseDown = false);
+
+flexContainerVideos.addEventListener('mousemove', e => {
+    e.preventDefault();
+    if (!mouseDown) {
+        return;
+    }
+    const x = e.pageX - flexContainerVideos.offsetLeft;
+    const scroll = x - startX;
+    flexContainerVideos.scrollLeft = scrollLeft - scroll;
+});
+
+flexContainerVideos.addEventListener('mousedown', startDragging, false);
+flexContainerVideos.addEventListener('mouseup', stopDragging, false);
+flexContainerVideos.addEventListener('mouseleave', stopDragging, false);
+
+////SIGNALING
+
 //server emits created
 socket.on('created', room => {
     roomID = room;

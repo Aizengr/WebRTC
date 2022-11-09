@@ -14,7 +14,7 @@
         <title>WebRTC Application</title>
     </head>
     <body>
-        <div class="main-grid">
+        <div class="main-grid hidden">
             <div class="website-title main-grid-item1">
                 <h1>WebRTC.</h1>
             </div>
@@ -48,7 +48,7 @@
             </div>
         </div>
 
-        <div class="call-page-layout hidden">
+        <div class="call-page-layout">
             <div class="call-ui-grid">
                 <div class="call-ui-grid-item1">
                     <p class="title">WebRTC.</p>
@@ -62,7 +62,15 @@
                 <div
                     class="call-ui-grid-item3 flex-video-container"
                     id="secVideo"
-                ></div>
+                >
+                    <video class="flex-video-item" autoplay></video>
+                    <video class="flex-video-item" autoplay></video>
+                    <video class="flex-video-item" autoplay></video>
+                    <video class="flex-video-item" autoplay></video>
+                    <video class="flex-video-item" autoplay></video>
+                    <video class="flex-video-item" autoplay></video>
+                    <video class="flex-video-item" autoplay></video>
+                </div>
 
                 <div class="call-ui-grid-item4">
                     <p class="chat-title chat-flex-item">Chat</p>

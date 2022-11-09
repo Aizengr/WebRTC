@@ -31,14 +31,13 @@ label {
     text-align: center;
     margin-bottom: 1rem;
     border-radius: 0.3rem;
-    width: 50%;
+    width: 70%;
     height: 1.5rem;
     box-sizing: border-box;
     background-color: rgb(212, 212, 212);
 }
 .room-number-input:focus,
-.username-input:focus,
-.message-input:focus {
+.username-input:focus {
     background-color: #c65588;
 }
 
@@ -210,7 +209,7 @@ label {
 .call-ui-grid-item3 {
     margin-left: 2px;
     left: 0px;
-    overflow-x: auto;
+    overflow-x: hidden;
     overflow-y: hidden;
     grid-area: sec-video;
 }
@@ -261,12 +260,14 @@ video {
 }
 
 .main-video {
-    width: 70%;
-    height: 100%;
+    width: 65%;
+    height: 90%;
     justify-self: center;
 }
 
 .flex-video-container {
+    cursor: grab;
+    padding-top: 1rem;
     padding-left: 0.8rem;
     padding-right: 0.8rem;
     display: flex;
@@ -274,8 +275,14 @@ video {
 }
 
 .flex-video-item {
+    cursor: pointer;
     width: 25%;
     height: 95%;
+    transition: transform ease 0.2s;
+}
+
+.flex-video-item:hover {
+    transform: scale(1.2) translate(0, -10px);
 }
 
 .call-ui-grid-item3::-webkit-scrollbar {
