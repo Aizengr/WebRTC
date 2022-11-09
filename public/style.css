@@ -5,7 +5,6 @@
 }
 
 html {
-    /* To make use of full height of page*/
     min-height: 100%;
     margin: 0;
 }
@@ -203,7 +202,7 @@ label {
 
 video {
     background-color: #000;
-    object-fit: fill;
+    object-fit: scale-down;
     width: 100%;
     height: 100%;
     border-radius: 0.4rem;
@@ -221,6 +220,6 @@ video {
 }
 
 .flex-video-item {
-    width: 20%;
+    width: 25%;
     height: 95%;
 }

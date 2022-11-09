@@ -9,7 +9,7 @@ const { REPL_MODE_SLOPPY } = require('repl');
 const app = express();
 
 //keeping all client objects
-const allClients = [];
+const allClients = new Map();
 
 const httpsOptions = {
     key: fs.readFileSync('./backend/security/cert.key'),
@@ -23,12 +23,9 @@ let io = require('socket.io')(https);
 app.use(express.static('public'));
 
 //checking if username within a room exists
-function usernameCheck(socket, room, username) {
-    console.log(socket.id, room, username);
-
-    let roomClients = allClients.filter(client => client.roomID === room);
+function usernameCheck(room, username) {
     let result = true;
-    roomClients.forEach(client => {
+    allClients.get(room).forEach(client => {
         console.log('FOUND -> ' + client.username);
         if (client.username.toUpperCase() === username.toUpperCase()) {
             console.log('denied');
@@ -46,39 +43,44 @@ io.on('connection', socket => {
         socket.join(roomID);
         socket.emit('created', roomID);
 
+        //new set containing client objects for each room on the Map
+        let roomSet = new Set();
+
         let client = {
             username: username,
-            socket: socket,
-            roomID: roomID,
+            socketID: socket.id,
         };
+        roomSet.add(client);
         console.log(
             'CREATE REQUEST - Socket: ' +
-                client.socket.id +
+                client.socketID +
                 ' - Username: ' +
                 client.username
         );
-        allClients.push(client);
+        allClients.set(roomID, roomSet);
     });
 
     socket.on('join', (room, username) => {
         console.log(
             'JOIN REQUEST - Socket: ' + socket.id + ' - Username: ' + username
         );
-        console.log(usernameCheck(socket, room, username));
+        console.log(usernameCheck(room, username));
 
-        if (usernameCheck(socket, room, username)) {
+        if (usernameCheck(room, username)) {
             //if username does not exist
             let myRoom = io.sockets.adapter.rooms.get(room);
             if (myRoom) {
                 //if room exists
                 let client = {
                     username: username,
-                    socket: socket,
-                    roomID: room,
+                    socketID: socket.id,
                 };
+
+                //finding roomID on Map and updating its Set
+                allClients.get(room).add(client);
+
                 socket.join(room);
                 socket.emit('joined', room);
-                allClients.push(client);
             } else {
                 //if room does not exist
                 socket.emit('roomnotfound', room);
@@ -89,31 +91,25 @@ io.on('connection', socket => {
     });
 
     //disconnect event when any client dc's, informing the rest
-    socket.on('disconnect', () => {
-        console.log('User disconnected from socket: ' + socket.id);
-        if (allClients.length > 1) {
-            //
-            let dcedPeer = allClients.filter(client => {
-                console.log('All clients => ' + client.socket.id);
-                return client.socket.id === socket.id;
-            });
-            //emiting dc event
-            if (!dcedPeer === 'undefined') {
-                //avoiding issues with connections made in the middle of server downtime
-                socket
-                    .to(dcedPeer[0].roomID)
-                    .emit('peerDisconnected', dcedPeer[0].username);
-                //removing disconnected peer
-                console.log('Removing ' + allClients.indexOf(dcedPeer));
-
-                allClients.splice(allClients.indexOf(dcedPeer), 1);
+    socket.on('disconnecting', () => {
+        socket.rooms.forEach(room => {
+            if (allClients.has(room)) {
+                if (allClients.get(room).size > 1) {
+                    let dcedPeer;
+                    allClients.get(room).forEach(client => {
+                        if (client.socketID === socket.id) {
+                            dcedPeer = client;
+                        }
+                    });
+                    socket.to(room).emit('peerDisconnected', dcedPeer.username);
+                    allClients.get(room).delete(dcedPeer);
+                } else {
+                    allClients.get(room).clear();
+                }
             }
-        }
+        });
     });
 
-    socket.on('disconnecting', reason => {
-        console.log('Reason ---' + reason);
-    });
     //relay only handlers
     //ready is emmited to the whole room
     socket.on('ready', (room, username) => {
@@ -139,8 +135,11 @@ io.on('connection', socket => {
 });
 
 function findDestSocketID(event) {
-    let destUser = allClients.filter(client => client.username === event.to);
-    return destUser[0].socket.id;
+    let destUser;
+    allClients.get(event.room).forEach(client => {
+        if (client.username === event.to) destUser = client;
+    });
+    return destUser.socketID;
 }
 
 https.listen(port, () => {
