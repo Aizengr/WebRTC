@@ -4,6 +4,11 @@
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script
+            src="https://kit.fontawesome.com/6d4c89936a.js"
+            crossorigin="anonymous"
+        ></script>
+
         <link rel="stylesheet" href="style.css" />
         <link rel="icon" type="image/x-icon" href="/icons/webrtc.svg" />
         <title>WebRTC Application</title>
@@ -43,19 +48,36 @@
             </div>
         </div>
 
-        <div class="call-ui-grid hidden">
-            <div class="call-ui-grid-item1">
-                <p class="title">WebRTC.</p>
-                <button class="roomID btn" id="copyID" type="submit">
-                    Copy roomID
-                </button>
-            </div>
-            <div class="call-ui-grid-item2 main-video" id="mainVideo">
-                <video id="localVideo" autoplay></video>
-            </div>
-            <div class="call-ui-grid-item3 flex-video-container"></div>
+        <div class="call-page-layout hidden">
+            <div class="call-ui-grid">
+                <div class="call-ui-grid-item1">
+                    <p class="title">WebRTC.</p>
+                    <button class="roomID btn" id="copyID" type="submit">
+                        Copy roomID
+                    </button>
+                </div>
+                <div class="call-ui-grid-item2 main-video" id="mainVideo">
+                    <video id="localVideo" autoplay></video>
+                </div>
+                <div
+                    class="call-ui-grid-item3 flex-video-container"
+                    id="secVideo"
+                ></div>
 
-            <div class="chat call-ui-grid-item4">Chat</div>
+                <div class="call-ui-grid-item4">
+                    <p class="chat-title chat-flex-item">Chat</p>
+                    <div class="message-area chat-flex-item"></div>
+                    <div class="input-area chat-flex-item">
+                        <input
+                            class="message-input"
+                            autocomplete="off"
+                            id="chatMessage"
+                            type="text"
+                        />
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="modal hidden">

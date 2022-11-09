@@ -13,8 +13,8 @@ const btnCopyID = document.getElementById('copyID');
 const inputUsername = document.getElementById('username');
 const textUsernameError = document.getElementById('usernameError');
 
+const callPageLayout = document.querySelector('.call-page-layout');
 const mainGrid = document.querySelector('.main-grid');
-const callGrid = document.querySelector('.call-ui-grid');
 const flexContainerVideos = document.querySelector('.flex-video-container');
 
 const modal = document.querySelector('.modal');
@@ -68,7 +68,7 @@ const closeModal = () => {
 
 const changeLayout = () => {
     mainGrid.classList.add('hidden');
-    callGrid.classList.remove('hidden');
+    callPageLayout.classList.remove('hidden');
 };
 
 //changing modal content dynamically
