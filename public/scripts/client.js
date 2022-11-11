@@ -20,6 +20,12 @@ const flexContainerVideos = document.querySelector('.flex-video-container');
 const modal = document.querySelector('.modal');
 const overlay = document.querySelector('.overlay');
 const titleText = document.querySelector('.title');
+const settingsOverlay = document.querySelector('.settings-overlay');
+const btnSettings = document.querySelector('.settings');
+const btnCloseSettings = document.querySelector('.settings-close-button');
+const cameraOptions = document.querySelector('.cameras');
+const micOptions = document.querySelector('.mics');
+const speakerOptions = document.querySelector('.speakers');
 
 //creating new remote video element
 function createRemoteVideo(remoteUsername) {
@@ -37,6 +43,8 @@ let localStream;
 //multiple rtc connections, username/connection key-value pair
 let rtcPeerConnections = new Map();
 let username;
+
+const userDevices = [];
 
 //STUN SERVERS
 const iceServers = {
@@ -63,6 +71,41 @@ let streamConstraints = {
 //connecting to socket.io server
 const socket = io();
 
+//device functions
+function updateSettingsDeviceList() {
+    navigator.mediaDevices
+        .enumerateDevices()
+        .then(devices => {
+            devices.forEach(device => {
+                console.log(device);
+                userDevices.push([device.kind, device.label, device.deviceId]);
+                let option = document.createElement('option');
+                option.innerHTML = `${device.label}`;
+                if (device.kind === 'videoinput') {
+                    cameraOptions.append(option);
+                } else if (device.kind === 'audioinput') {
+                    micOptions.append(option);
+                } else {
+                    speakerOptions.append(option);
+                }
+            });
+        })
+        .catch(err => console.log(err));
+}
+
+//LAYOUT FUNCTIONS
+function openSettings() {
+    settingsOverlay.classList.add('settings-overlay-enable');
+}
+
+function closeSettings() {
+    settingsOverlay.classList.remove('settings-overlay-enable');
+}
+
+function settingsActive() {
+    return settingsOverlay.classList.contains('settings-overlay-enable');
+}
+
 const openModal = () => {
     modal.classList.remove('hidden');
     overlay.classList.remove('hidden');
@@ -88,10 +131,10 @@ const changeModalSuccess = () => {
     font-weight: 700; 
     font-family: 'Tahoma', sans-serif; 
     font-size: 1.5rem; 
-    background-color: #000; 
-    color: #fff;
-    border-radius: 1.5rem;
-    padding: 0.5rem;
+    background-color: #c65588; 
+    color: #000;
+    border-radius: 1rem;
+    padding: 0.3rem;
     text-align: center;">
     
     ${roomID}</p>
@@ -124,6 +167,7 @@ const idIsValid = () => {
     return roomID.length > 36 ? false : true;
 };
 
+//EVENT LISTENERS
 //listener for room button
 btnGoRoom.addEventListener('click', e => {
     roomID = inputroomID.value;
@@ -139,6 +183,7 @@ btnGenerateRoom.addEventListener('click', event => {
     }
 });
 
+//listener for logo reloading page
 titleText.addEventListener('click', event => {
     window.location.reload();
 });
@@ -173,7 +218,19 @@ window.addEventListener('unload', () => {
     socket.emit('disconnect');
 });
 
-//scrolling with grab
+//Listener for settings button
+btnSettings.addEventListener('click', e => {
+    if (settingsActive()) {
+        closeSettings();
+    } else {
+        openSettings();
+    }
+});
+
+//listener for close settings button
+btnCloseSettings.addEventListener('click', closeSettings);
+
+//scrolling with grab listeners
 let mouseDown = false;
 let startX, scrollLeft;
 
@@ -207,6 +264,7 @@ socket.on('created', room => {
     changeLayout();
     changeModalSuccess();
     openModal();
+    updateSettingsDeviceList();
 
     navigator.mediaDevices
         .getUserMedia(streamConstraints) //getting media devices

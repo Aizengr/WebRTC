@@ -58,6 +58,43 @@
                     <i class="settings fa-solid fa-gear"></i>
                 </div>
                 <div class="call-ui-grid-item2 main-video" id="mainVideo">
+                    <div class="settings-overlay">
+                        <i
+                            class="settings-close-button fa-solid fa-chevron-up"
+                        ></i>
+                        <div class="select-cam">
+                            <span>Video source device:</span>
+                            <select
+                                title="cameras"
+                                name="cameras"
+                                class="btn cameras"
+                            ></select>
+                        </div>
+                        <div class="select-mic">
+                            <span>Audio-input device:</span>
+                            <select
+                                name="mics"
+                                title="mics"
+                                class="btn mics"
+                            ></select>
+                        </div>
+                        <div class="select-speakers">
+                            <span>Audio-output device:</span>
+                            <select
+                                name="speakers"
+                                title="speakers"
+                                class="btn speakers"
+                            ></select>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn apply-settings">
+                                Apply
+                            </button>
+                            <button type="submit" class="btn save-settings">
+                                Save
+                            </button>
+                        </div>
+                    </div>
                     <video id="localVideo" autoplay></video>
                 </div>
                 <div
@@ -80,8 +117,6 @@
                 </div>
             </div>
         </div>
-
-        <div class="settings-overlay">Test</div>
 
         <div class="modal hidden">
             <div id="modalText"></div>
