@@ -429,12 +429,11 @@ flexContainerVideos.addEventListener('dblclick', e => {
     }
 });
 
-//event listener for sending chat message
-btnSendMessage.addEventListener('click', e => {
+function createSendLocalMessage() {
     let message = inputChatMessage.value;
     inputChatMessage.value = '';
 
-    if (message && message != '') {
+    if (message != '') {
         let newMessageElement = document.createElement('p');
         newMessageElement.setAttribute('username', username);
         newMessageElement.classList.add('chat-flex-my-message', 'message');
@@ -450,7 +449,31 @@ btnSendMessage.addEventListener('click', e => {
             channel.send(JSON.stringify(msgObject));
         });
     }
+}
+
+//event listener for sending chat message
+btnSendMessage.addEventListener('click', createSendLocalMessage);
+
+//event listener for pressing enter while on message input area
+
+inputChatMessage.addEventListener('keypress', e => {
+    if (e.key === 'Enter') {
+        createSendLocalMessage();
+    }
 });
+
+//handling remote message
+function handleMessage(data) {
+    let msgObject = JSON.parse(data);
+    let remoteUsername = msgObject.from;
+    if (msgObject.type === 'chat') {
+        let newMessageElement = document.createElement('p');
+        newMessageElement.setAttribute('username', remoteUsername);
+        newMessageElement.classList.add('chat-flex-others-message', 'message');
+        newMessageElement.textContent = msgObject.value;
+        chatFlex.append(newMessageElement);
+    }
+}
 
 ////SIGNALING
 
@@ -510,13 +533,7 @@ socket.on('ready', remoteUsername => {
             console.log(event);
         });
         newDataChannel.addEventListener('message', event => {
-            console.log(event);
-            // let message = event.data;
-            // let newMessageElement = document.createElement('p');
-            // newMessageElement.setAttribute('username', remoteUsername);
-            // newMessageElement.classList.add('chat-flex-others-message', 'message');
-            // newMessageElement.textContent = message;
-            // chatFlex.append(newMessageElement);
+            handleMessage(event.data);
         });
 
         //adds event listeners to the newly created object above
@@ -583,13 +600,7 @@ socket.on('offer', (sessionDesc, remoteUsername) => {
             console.log('Data channel created');
             dataChannels.set(remoteUsername, newDataChannel);
             newDataChannel.addEventListener('message', event => {
-                console.log(event);
-                // let message = event.data;
-                // let newMessageElement = document.createElement('p');
-                // newMessageElement.setAttribute('username', remoteUsername);
-                // newMessageElement.classList.add('chat-flex-others-message', 'message');
-                // newMessageElement.textContent = message;
-                // chatFlex.append(newMessageElement);
+                handleMessage(event.data);
             });
         });
         //adds event listeners to the newly created object above
