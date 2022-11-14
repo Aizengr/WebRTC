@@ -4,6 +4,7 @@
 const inputroomID = document.getElementById('roomID');
 const btnGoRoom = document.getElementById('goRoom');
 const localVideo = document.getElementById('localVideo');
+const mainUsername = document.querySelector('.main-username');
 const btnGenerateRoom = document.getElementById('generateRoom');
 const modalText = document.getElementById('modalText');
 const btnCloseModal = document.getElementById('gotRoomID');
@@ -26,8 +27,10 @@ const speakerOptions = document.querySelector('.speakers');
 const btnApply = document.querySelector('.apply-settings');
 const btnSaveSettings = document.querySelector('.save-settings');
 const btnMute = document.querySelector('.mute');
-
 const btnSharescreen = document.querySelector('.sharescreen');
+const mainVideoSection = document.getElementById('mainVideoSection');
+
+const allVideos = document.getElementsByTagName('video');
 
 //GLOBAL variables
 let roomID;
@@ -116,11 +119,20 @@ function sendNewStream(stream) {
 
 //creating new remote video element
 function createRemoteVideo(remoteUsername) {
+    //dynamically creating new video elements
+    let newDiv = document.createElement('div');
+    newDiv.classList.add('flex-video-item');
+    newDiv.setAttribute('id', `${remoteUsername}`);
+    let newSpan = document.createElement('span');
+    newSpan.classList.add('remote-username');
+    newSpan.textContent = ` ${remoteUsername}`;
     let video = document.createElement('video');
-    video.classList.add('remote', 'flex-video-item');
+    video.classList.add('bottom');
     video.setAttribute('id', `${remoteUsername}`);
     video.setAttribute('autoplay', true);
-    flexContainerVideos.append(video);
+    newDiv.appendChild(newSpan);
+    newDiv.appendChild(video);
+    flexContainerVideos.append(newDiv);
     return video;
 }
 
@@ -355,6 +367,7 @@ btnSharescreen.addEventListener('click', e => {
     else stopSharingScreen();
 });
 
+//changing devices to new ones
 const changeInputDevices = () => {
     let newConstraints = {
         audio: {
@@ -376,12 +389,46 @@ const changeInputDevices = () => {
         });
 };
 
-//listener for apply device settings
-
+//listener for applying device settings
 btnApply.addEventListener('click', changeInputDevices);
 btnSaveSettings.addEventListener('click', e => {
     changeInputDevices();
     closeSettings();
+});
+
+//event delegation for videos under flex container
+flexContainerVideos.addEventListener('dblclick', e => {
+    if (e.target && e.target.matches('.bottom')) {
+        //video that needs change
+        const clickedVideo = e.target;
+        clickedVideo.classList.remove('bottom');
+        clickedVideo.classList.add('target-main');
+        let clickedUsername = clickedVideo.getAttribute('id');
+        console.log(e.target.parentNode);
+        flexContainerVideos.removeChild(e.target.parentNode);
+
+        //main video
+        let main = document.querySelector('.target-main');
+        let mainUsername = document.querySelector('.main-username');
+
+        //adding as main
+        mainVideoSection.removeChild(main);
+        mainVideoSection.appendChild(clickedVideo);
+        main.classList.remove('target-main');
+        mainUsername.textContent = clickedUsername;
+
+        //adding previous main video as flex item
+
+        let newDiv = document.createElement('div');
+        newDiv.classList.add('flex-video-item');
+        newDiv.setAttribute('id', `${mainUsername}`);
+        let newSpan = document.createElement('span');
+        newSpan.textContent = ` ${clickedUsername}`;
+        main.classList.add('bottom');
+        newDiv.appendChild(newSpan);
+        newDiv.appendChild(main);
+        flexContainerVideos.append(newDiv);
+    }
 });
 
 ////SIGNALING
@@ -397,6 +444,9 @@ socket.on('created', room => {
         .getUserMedia(streamConstraints) //getting media devices
         .then(stream => {
             localStream = stream;
+            mainUsername.textContent = `${username}`;
+            localVideo.setAttribute('id', `${username}`);
+
             localVideo.srcObject = stream; //shows stream
         })
         .catch(err => {
@@ -411,6 +461,8 @@ socket.on('joined', room => {
         .getUserMedia(streamConstraints)
         .then(stream => {
             localStream = stream;
+            mainUsername.textContent = `${username}`;
+            localVideo.setAttribute('id', `${username}`);
             localVideo.srcObject = stream;
             socket.emit('ready', roomID, username); //sends ready to the server
         })

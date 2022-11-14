@@ -173,7 +173,7 @@ label {
     width: 100vw;
     display: grid;
     grid-template-columns: 85% 15%;
-    grid-template-rows: 8% 70% 22%;
+    grid-template-rows: 8% 63% 27%;
     grid-template-areas:
         'header chat'
         'main-video chat'
@@ -240,8 +240,7 @@ label {
 .call-ui-grid-item3 {
     margin-left: 2px;
     left: 0px;
-    overflow-x: hidden;
-    overflow-y: hidden;
+    overflow: hidden;
     grid-area: sec-video;
 }
 
@@ -299,14 +298,24 @@ video {
     object-fit: cover;
     width: 100%;
     height: 100%;
-    border-radius: 0.4rem;
     transition: transform ease 0.2s;
 }
 
 .main-video {
+    text-align: center;
     width: 65%;
     height: 90%;
     justify-self: center;
+}
+
+.main-username {
+    display: block;
+    border-top-left-radius: 0.4rem;
+    border-top-right-radius: 0.4rem;
+    color: #fff;
+    width: 100%;
+    position: relative;
+    background: rgba(54, 52, 52, 0.2);
 }
 
 .flex-video-container {
@@ -319,14 +328,30 @@ video {
 }
 
 .flex-video-item {
+    display: flex;
+    position: relative;
+    text-align: center;
     cursor: pointer;
-    width: 25%;
-    height: 95%;
+    min-width: 24%;
+    min-height: 95%;
     transition: transform ease 0.2s;
 }
 
+.flex-video-item > video {
+    border-radius: 0.4rem;
+}
+
+.flex-video-item > span {
+    border-top-left-radius: 0.4rem;
+    border-top-right-radius: 0.4rem;
+    position: absolute;
+    color: #fff;
+    width: 100%;
+    background: rgba(54, 52, 52, 0.2);
+}
+
 .flex-video-item:hover {
-    transform: scale(1.5);
+    transform: scale(1.1);
 }
 
 .settings-overlay {
