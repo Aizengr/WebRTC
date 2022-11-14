@@ -92,6 +92,28 @@ function updateSettingsDeviceList() {
         .catch(err => console.log(err));
 }
 
+//sending new stream after input device changes/sharescreen
+function sendNewStream(stream) {
+    localStream = stream;
+    localVideo.srcObject = stream; //shows stream
+    const [videoTrack] = stream.getVideoTracks();
+    const [audioTrack] = stream.getAudioTracks();
+
+    //sending audio and video tracks to every rtc connection
+    rtcPeerConnections.forEach(pc => {
+        const senderV = pc
+            .getSenders()
+            .find(s => s.track.kind === videoTrack.kind);
+        console.log('Found sender:', senderV);
+        senderV.replaceTrack(videoTrack);
+        const senderA = pc
+            .getSenders()
+            .find(s => s.track.kind === audioTrack.kind);
+        console.log('Found sender:', senderA);
+        senderA.replaceTrack(audioTrack);
+    });
+}
+
 //creating new remote video element
 function createRemoteVideo(remoteUsername) {
     let video = document.createElement('video');
@@ -318,24 +340,9 @@ const stopSharingScreen = () => {
     navigator.mediaDevices
         .getUserMedia(streamConstraints) //getting media devices
         .then(stream => {
-            localStream = stream;
-            localVideo.srcObject = stream; //shows stream
-            const [videoTrack] = stream.getVideoTracks();
-            const [audioTrack] = stream.getAudioTracks();
-            rtcPeerConnections.forEach(pc => {
-                const senderV = pc
-                    .getSenders()
-                    .find(s => s.track.kind === videoTrack.kind);
-                console.log('Found sender:', senderV);
-                senderV.replaceTrack(videoTrack);
-                const senderA = pc
-                    .getSenders()
-                    .find(s => s.track.kind === audioTrack.kind);
-                console.log('Found sender:', senderA);
-                senderA.replaceTrack(audioTrack);
-            });
+            sendNewStream(stream);
             isScreenSharing = false;
-        })
+        }) //sending stream
         .catch(err => {
             console.log('An error occured when accessing media devices ' + err);
         });
@@ -363,24 +370,7 @@ const changeInputDevices = () => {
     };
     navigator.mediaDevices
         .getUserMedia(newConstraints) //getting media devices
-        .then(stream => {
-            localStream = stream;
-            localVideo.srcObject = stream; //shows stream
-            const [videoTrack] = stream.getVideoTracks();
-            const [audioTrack] = stream.getAudioTracks();
-            rtcPeerConnections.forEach(pc => {
-                const senderV = pc
-                    .getSenders()
-                    .find(s => s.track.kind === videoTrack.kind);
-                console.log('Found sender:', senderV);
-                senderV.replaceTrack(videoTrack);
-                const senderA = pc
-                    .getSenders()
-                    .find(s => s.track.kind === audioTrack.kind);
-                console.log('Found sender:', senderA);
-                senderA.replaceTrack(audioTrack);
-            });
-        })
+        .then(stream => sendNewStream(stream)) //sending stream
         .catch(err => {
             console.log('An error occured when accessing media devices ' + err);
         });
