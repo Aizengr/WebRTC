@@ -404,18 +404,18 @@ flexContainerVideos.addEventListener('dblclick', e => {
         clickedVideo.classList.remove('bottom');
         clickedVideo.classList.add('target-main');
         let clickedUsername = clickedVideo.getAttribute('id');
-        console.log(e.target.parentNode);
         flexContainerVideos.removeChild(e.target.parentNode);
 
         //main video
         let main = document.querySelector('.target-main');
-        let mainUsername = document.querySelector('.main-username');
+        let mainUsernameElement = document.querySelector('.main-username');
+        let mainUsername = mainUsernameElement.textContent;
 
         //adding as main
         mainVideoSection.removeChild(main);
         mainVideoSection.appendChild(clickedVideo);
         main.classList.remove('target-main');
-        mainUsername.textContent = clickedUsername;
+        mainUsernameElement.textContent = clickedUsername;
 
         //adding previous main video as flex item
 
@@ -423,7 +423,7 @@ flexContainerVideos.addEventListener('dblclick', e => {
         newDiv.classList.add('flex-video-item');
         newDiv.setAttribute('id', `${mainUsername}`);
         let newSpan = document.createElement('span');
-        newSpan.textContent = ` ${clickedUsername}`;
+        newSpan.textContent = ` ${mainUsername}`;
         main.classList.add('bottom');
         newDiv.appendChild(newSpan);
         newDiv.appendChild(main);

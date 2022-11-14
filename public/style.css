@@ -228,7 +228,8 @@ label {
 
 .settings:hover,
 .mute:hover,
-.sharescreen:hover {
+.sharescreen:hover,
+.change-to-grid:hover {
     color: #c65588;
 }
 
