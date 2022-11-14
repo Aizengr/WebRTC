@@ -1,14 +1,12 @@
 'use strict';
 
 //html elements
-const divSelectRoom = document.getElementById('selectRoom');
 const inputroomID = document.getElementById('roomID');
 const btnGoRoom = document.getElementById('goRoom');
 const localVideo = document.getElementById('localVideo');
 const btnGenerateRoom = document.getElementById('generateRoom');
 const modalText = document.getElementById('modalText');
 const btnCloseModal = document.getElementById('gotRoomID');
-const divNewRoom = document.getElementById('newRoom');
 const btnCopyID = document.getElementById('copyID');
 const inputUsername = document.getElementById('username');
 const textUsernameError = document.getElementById('usernameError');
@@ -16,7 +14,6 @@ const textUsernameError = document.getElementById('usernameError');
 const callPageLayout = document.querySelector('.call-page-layout');
 const mainGrid = document.querySelector('.main-grid');
 const flexContainerVideos = document.querySelector('.flex-video-container');
-
 const modal = document.querySelector('.modal');
 const overlay = document.querySelector('.overlay');
 const titleText = document.querySelector('.title');
@@ -26,16 +23,11 @@ const btnCloseSettings = document.querySelector('.settings-close-button');
 const cameraOptions = document.querySelector('.cameras');
 const micOptions = document.querySelector('.mics');
 const speakerOptions = document.querySelector('.speakers');
+const btnApply = document.querySelector('.apply-settings');
+const btnSaveSettings = document.querySelector('.save-settings');
+const btnMute = document.querySelector('.mute');
 
-//creating new remote video element
-function createRemoteVideo(remoteUsername) {
-    let video = document.createElement('video');
-    video.classList.add('remote', 'flex-video-item');
-    video.setAttribute('id', `${remoteUsername}`);
-    video.setAttribute('autoplay', true);
-    flexContainerVideos.append(video);
-    return video;
-}
+const btnSharescreen = document.querySelector('.sharescreen');
 
 //GLOBAL variables
 let roomID;
@@ -43,8 +35,7 @@ let localStream;
 //multiple rtc connections, username/connection key-value pair
 let rtcPeerConnections = new Map();
 let username;
-
-const userDevices = [];
+let isScreenSharing = false;
 
 //STUN SERVERS
 const iceServers = {
@@ -71,16 +62,24 @@ let streamConstraints = {
 //connecting to socket.io server
 const socket = io();
 
+//detecting whos speaking
+
 //device functions
 function updateSettingsDeviceList() {
+    let selects = document.querySelectorAll('select');
+    selects.forEach(select => {
+        while (select.firstChild) {
+            select.removeChild(select.lastChild);
+        }
+    });
+
     navigator.mediaDevices
         .enumerateDevices()
         .then(devices => {
             devices.forEach(device => {
-                console.log(device);
-                userDevices.push([device.kind, device.label, device.deviceId]);
                 let option = document.createElement('option');
                 option.innerHTML = `${device.label}`;
+                option.value = `${device.deviceId}`;
                 if (device.kind === 'videoinput') {
                     cameraOptions.append(option);
                 } else if (device.kind === 'audioinput') {
@@ -93,12 +92,25 @@ function updateSettingsDeviceList() {
         .catch(err => console.log(err));
 }
 
+//creating new remote video element
+function createRemoteVideo(remoteUsername) {
+    let video = document.createElement('video');
+    video.classList.add('remote', 'flex-video-item');
+    video.setAttribute('id', `${remoteUsername}`);
+    video.setAttribute('autoplay', true);
+    flexContainerVideos.append(video);
+    return video;
+}
+
 //LAYOUT FUNCTIONS
 function openSettings() {
+    updateSettingsDeviceList();
+    btnSettings.style.color = '#c65588';
     settingsOverlay.classList.add('settings-overlay-enable');
 }
 
 function closeSettings() {
+    btnSettings.style.color = '#ffffff';
     settingsOverlay.classList.remove('settings-overlay-enable');
 }
 
@@ -256,6 +268,132 @@ flexContainerVideos.addEventListener('mousedown', startDragging, false);
 flexContainerVideos.addEventListener('mouseup', stopDragging, false);
 flexContainerVideos.addEventListener('mouseleave', stopDragging, false);
 
+//listener for mute/unmute
+btnMute.addEventListener('click', e => {
+    console.log(localStream.getAudioTracks()[0]);
+
+    if (!localStream.getAudioTracks()[0].enabled) {
+        btnMute.style.color = '#ffffff';
+        localStream.getAudioTracks()[0].enabled = true;
+    } else {
+        btnMute.style.color = '#c65588';
+        localStream.getAudioTracks()[0].enabled = false;
+    }
+});
+
+//capturing screen
+const shareScreen = () => {
+    btnSharescreen.style.color = '#c65588';
+    const sharescreenConstraints = {
+        video: {
+            cursor: 'always',
+        },
+        audio: false,
+    };
+
+    navigator.mediaDevices
+        .getDisplayMedia(sharescreenConstraints)
+        .then(stream => {
+            let [screen] = stream.getVideoTracks();
+            localStream = stream;
+            localVideo.srcObject = stream;
+            isScreenSharing = true;
+
+            rtcPeerConnections.forEach(pc => {
+                const senderV = pc
+                    .getSenders()
+                    .find(s => s.track.kind === screen.kind);
+                console.log('Found sender:', senderV);
+                senderV.replaceTrack(screen);
+            });
+        })
+        .catch(err => {
+            console.log('An error occured when accessing media devices ' + err);
+        });
+};
+
+//restoring stream to initial with default constraints
+const stopSharingScreen = () => {
+    btnSharescreen.style.color = '#ffffff';
+    navigator.mediaDevices
+        .getUserMedia(streamConstraints) //getting media devices
+        .then(stream => {
+            localStream = stream;
+            localVideo.srcObject = stream; //shows stream
+            const [videoTrack] = stream.getVideoTracks();
+            const [audioTrack] = stream.getAudioTracks();
+            rtcPeerConnections.forEach(pc => {
+                const senderV = pc
+                    .getSenders()
+                    .find(s => s.track.kind === videoTrack.kind);
+                console.log('Found sender:', senderV);
+                senderV.replaceTrack(videoTrack);
+                const senderA = pc
+                    .getSenders()
+                    .find(s => s.track.kind === audioTrack.kind);
+                console.log('Found sender:', senderA);
+                senderA.replaceTrack(audioTrack);
+            });
+            isScreenSharing = false;
+        })
+        .catch(err => {
+            console.log('An error occured when accessing media devices ' + err);
+        });
+};
+
+//sharescreen button listener
+
+btnSharescreen.addEventListener('click', e => {
+    if (!isScreenSharing) shareScreen();
+    else stopSharingScreen();
+});
+
+const changeInputDevices = () => {
+    let newConstraints = {
+        audio: {
+            deviceId: {
+                exact: micOptions.options[micOptions.selectedIndex].value,
+            },
+        },
+        video: {
+            deviceId: {
+                exact: cameraOptions.options[cameraOptions.selectedIndex].value,
+            },
+        },
+    };
+    navigator.mediaDevices
+        .getUserMedia(newConstraints) //getting media devices
+        .then(stream => {
+            localStream = stream;
+            localVideo.srcObject = stream; //shows stream
+            const [videoTrack] = stream.getVideoTracks();
+            const [audioTrack] = stream.getAudioTracks();
+            rtcPeerConnections.forEach(pc => {
+                const senderV = pc
+                    .getSenders()
+                    .find(s => s.track.kind === videoTrack.kind);
+                console.log('Found sender:', senderV);
+                senderV.replaceTrack(videoTrack);
+                const senderA = pc
+                    .getSenders()
+                    .find(s => s.track.kind === audioTrack.kind);
+                console.log('Found sender:', senderA);
+                senderA.replaceTrack(audioTrack);
+            });
+        })
+        .catch(err => {
+            console.log('An error occured when accessing media devices ' + err);
+        });
+};
+
+//listener for apply device settings
+
+btnApply.addEventListener('click', changeInputDevices);
+btnSaveSettings.addEventListener('click', e => {
+    changeInputDevices();
+    closeSettings();
+});
+
 ////SIGNALING
 
 //server emits created
@@ -264,7 +402,6 @@ socket.on('created', room => {
     changeLayout();
     changeModalSuccess();
     openModal();
-    updateSettingsDeviceList();
 
     navigator.mediaDevices
         .getUserMedia(streamConstraints) //getting media devices

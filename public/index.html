@@ -55,7 +55,11 @@
                     <button class="roomID btn" id="copyID" type="submit">
                         Copy roomID
                     </button>
-                    <i class="settings fa-solid fa-gear"></i>
+                    <div class="settings-area">
+                        <i class="sharescreen fa-solid fa-display"></i>
+                        <i class="mute fa-solid fa-microphone-slash"></i>
+                        <i class="settings fa-solid fa-gear"></i>
+                    </div>
                 </div>
                 <div class="call-ui-grid-item2 main-video" id="mainVideo">
                     <div class="settings-overlay">
@@ -95,7 +99,7 @@
                             </button>
                         </div>
                     </div>
-                    <video id="localVideo" autoplay></video>
+                    <video id="localVideo" muted autoplay></video>
                 </div>
                 <div
                     class="call-ui-grid-item3 flex-video-container"

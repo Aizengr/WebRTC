@@ -172,7 +172,7 @@ label {
     height: 98vh;
     width: 100vw;
     display: grid;
-    grid-template-columns: 80% 20%;
+    grid-template-columns: 85% 15%;
     grid-template-rows: 8% 70% 22%;
     grid-template-areas:
         'header chat'
@@ -200,21 +200,36 @@ label {
 .call-ui-grid-item1 .roomID {
     font-size: 1.2rem;
     justify-self: center;
-    margin-right: 3rem;
+}
+
+.settings-area {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 2rem;
 }
 
 .call-ui-grid-item1 .settings {
-    display: table;
-    font-size: 2rem;
     padding-top: 5px;
     padding-right: 0.7rem;
-    color: #ffffff;
     cursor: pointer;
-    transition: transform 1s linear 0s;
+    /* transition: transform 1s linear 0s; */
 }
 
-.settings:hover {
-    color: #7a566f;
+.call-ui-grid-item1 .mute {
+    padding-top: 5px;
+    padding-right: 0.7rem;
+    cursor: pointer;
+}
+.call-ui-grid-item1 .sharescreen {
+    padding-top: 5px;
+    padding-right: 0.7rem;
+    cursor: pointer;
+}
+
+.settings:hover,
+.mute:hover,
+.sharescreen:hover {
+    color: #c65588;
 }
 
 .call-ui-grid-item2 {
@@ -350,7 +365,7 @@ select {
 }
 
 .settings-close-button:hover {
-    color: #7a566f;
+    color: #c65588;
 }
 .apply-settings {
     margin-right: 30px;

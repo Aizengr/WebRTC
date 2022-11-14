@@ -110,6 +110,12 @@ io.on('connection', socket => {
         });
     });
 
+    socket.on('disconnect', reason => {
+        console.log(
+            `Socket: ${socket.id} disconnected due to reason: ${reason}`
+        );
+    });
+
     //relay only handlers
     //ready is emmited to the whole room
     socket.on('ready', (room, username) => {
