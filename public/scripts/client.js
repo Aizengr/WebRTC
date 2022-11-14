@@ -434,7 +434,7 @@ btnSendMessage.addEventListener('click', e => {
     let message = inputChatMessage.value;
     inputChatMessage.value = '';
 
-    if (message != '') {
+    if (message && message != '') {
         let newMessageElement = document.createElement('p');
         newMessageElement.setAttribute('username', username);
         newMessageElement.classList.add('chat-flex-my-message', 'message');
@@ -577,21 +577,21 @@ socket.on('offer', (sessionDesc, remoteUsername) => {
         });
 
         //adding data channel for data exchange and chat implementation
-        let newDataChannel =
-            rtcPeerConnection.createDataChannel('Chat channel');
-        newDataChannel.addEventListener('open', event => {
-            console.log(event);
+        let newDataChannel;
+        rtcPeerConnection.addEventListener('datachannel', event => {
+            newDataChannel = event.channel;
+            console.log('Data channel created');
+            dataChannels.set(remoteUsername, newDataChannel);
+            newDataChannel.addEventListener('message', event => {
+                console.log(event);
+                // let message = event.data;
+                // let newMessageElement = document.createElement('p');
+                // newMessageElement.setAttribute('username', remoteUsername);
+                // newMessageElement.classList.add('chat-flex-others-message', 'message');
+                // newMessageElement.textContent = message;
+                // chatFlex.append(newMessageElement);
+            });
         });
-        newDataChannel.addEventListener('message', event => {
-            console.log(event);
-            // let message = event.data;
-            // let newMessageElement = document.createElement('p');
-            // newMessageElement.setAttribute('username', remoteUsername);
-            // newMessageElement.classList.add('chat-flex-others-message', 'message');
-            // newMessageElement.textContent = message;
-            // chatFlex.append(newMessageElement);
-        });
-
         //adds event listeners to the newly created object above
         rtcPeerConnection.onicecandidate = event => {
             if (event.candidate) {
@@ -635,7 +635,6 @@ socket.on('offer', (sessionDesc, remoteUsername) => {
                 console.log('Error occured when creating answer' + err);
             });
         rtcPeerConnections.set(remoteUsername, rtcPeerConnection);
-        dataChannels.set(remoteUsername, newDataChannel);
     }
 });
 
