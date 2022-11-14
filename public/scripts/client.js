@@ -29,6 +29,9 @@ const btnSaveSettings = document.querySelector('.save-settings');
 const btnMute = document.querySelector('.mute');
 const btnSharescreen = document.querySelector('.sharescreen');
 const mainVideoSection = document.getElementById('mainVideoSection');
+const btnSendMessage = document.querySelector('.send-button');
+const inputChatMessage = document.querySelector('.message-input');
+const chatFlex = document.querySelector('.chat-flex');
 
 const allVideos = document.getElementsByTagName('video');
 
@@ -37,6 +40,7 @@ let roomID;
 let localStream;
 //multiple rtc connections, username/connection key-value pair
 let rtcPeerConnections = new Map();
+let dataChannels = new Map();
 let username;
 let isScreenSharing = false;
 
@@ -107,12 +111,10 @@ function sendNewStream(stream) {
         const senderV = pc
             .getSenders()
             .find(s => s.track.kind === videoTrack.kind);
-        console.log('Found sender:', senderV);
         senderV.replaceTrack(videoTrack);
         const senderA = pc
             .getSenders()
             .find(s => s.track.kind === audioTrack.kind);
-        console.log('Found sender:', senderA);
         senderA.replaceTrack(audioTrack);
     });
 }
@@ -304,8 +306,6 @@ flexContainerVideos.addEventListener('mouseleave', stopDragging, false);
 
 //listener for mute/unmute
 btnMute.addEventListener('click', e => {
-    console.log(localStream.getAudioTracks()[0]);
-
     if (!localStream.getAudioTracks()[0].enabled) {
         btnMute.style.color = '#ffffff';
         localStream.getAudioTracks()[0].enabled = true;
@@ -337,7 +337,6 @@ const shareScreen = () => {
                 const senderV = pc
                     .getSenders()
                     .find(s => s.track.kind === screen.kind);
-                console.log('Found sender:', senderV);
                 senderV.replaceTrack(screen);
             });
         })
@@ -346,7 +345,7 @@ const shareScreen = () => {
         });
 };
 
-//restoring stream to initial with default constraints
+//restoring initial stream with default constraints
 const stopSharingScreen = () => {
     btnSharescreen.style.color = '#ffffff';
     navigator.mediaDevices
@@ -418,7 +417,6 @@ flexContainerVideos.addEventListener('dblclick', e => {
         mainUsernameElement.textContent = clickedUsername;
 
         //adding previous main video as flex item
-
         let newDiv = document.createElement('div');
         newDiv.classList.add('flex-video-item');
         newDiv.setAttribute('id', `${mainUsername}`);
@@ -428,6 +426,29 @@ flexContainerVideos.addEventListener('dblclick', e => {
         newDiv.appendChild(newSpan);
         newDiv.appendChild(main);
         flexContainerVideos.append(newDiv);
+    }
+});
+
+//event listener for sending chat message
+btnSendMessage.addEventListener('click', e => {
+    let message = inputChatMessage.value;
+    inputChatMessage.value = '';
+
+    if (message != '') {
+        let newMessageElement = document.createElement('p');
+        newMessageElement.setAttribute('username', username);
+        newMessageElement.classList.add('chat-flex-my-message', 'message');
+        newMessageElement.textContent = message;
+        chatFlex.append(newMessageElement);
+        dataChannels.forEach((channel, user) => {
+            console.log(channel);
+            const msgObject = {
+                value: message,
+                type: 'chat',
+                from: username,
+            };
+            channel.send(JSON.stringify(msgObject));
+        });
     }
 });
 
@@ -446,7 +467,6 @@ socket.on('created', room => {
             localStream = stream;
             mainUsername.textContent = `${username}`;
             localVideo.setAttribute('id', `${username}`);
-
             localVideo.srcObject = stream; //shows stream
         })
         .catch(err => {
@@ -473,8 +493,6 @@ socket.on('joined', room => {
 
 //server emits ready
 socket.on('ready', remoteUsername => {
-    console.log('GOT READY');
-
     //if client hasnt established peer connection yet
     if (!rtcPeerConnections.has(remoteUsername)) {
         //creates an RTCPeerConnectoin object
@@ -485,10 +503,25 @@ socket.on('ready', remoteUsername => {
             rtcPeerConnection.addTrack(track, localStream);
         });
 
+        //adding data channel for data exchange and chat implementation
+        let newDataChannel =
+            rtcPeerConnection.createDataChannel('Chat channel');
+        newDataChannel.addEventListener('open', event => {
+            console.log(event);
+        });
+        newDataChannel.addEventListener('message', event => {
+            console.log(event);
+            // let message = event.data;
+            // let newMessageElement = document.createElement('p');
+            // newMessageElement.setAttribute('username', remoteUsername);
+            // newMessageElement.classList.add('chat-flex-others-message', 'message');
+            // newMessageElement.textContent = message;
+            // chatFlex.append(newMessageElement);
+        });
+
         //adds event listeners to the newly created object above
         rtcPeerConnection.onicecandidate = event => {
             if (event.candidate) {
-                console.log('Sending ice candidate');
                 socket.emit('candidate', {
                     type: 'candidate',
                     label: event.candidate.sdpMLineIndex,
@@ -508,7 +541,6 @@ socket.on('ready', remoteUsername => {
         rtcPeerConnection.addEventListener('track', event => {
             const [remoteStream] = event.streams;
             newRemoteVideo.srcObject = remoteStream;
-            console.log('src added');
         });
 
         //prepares an offer and sends offer
@@ -528,6 +560,7 @@ socket.on('ready', remoteUsername => {
                 console.log(err);
             });
         rtcPeerConnections.set(remoteUsername, rtcPeerConnection);
+        dataChannels.set(remoteUsername, newDataChannel);
     }
 });
 
@@ -543,12 +576,25 @@ socket.on('offer', (sessionDesc, remoteUsername) => {
             rtcPeerConnection.addTrack(track, localStream);
         });
 
+        //adding data channel for data exchange and chat implementation
+        let newDataChannel =
+            rtcPeerConnection.createDataChannel('Chat channel');
+        newDataChannel.addEventListener('open', event => {
+            console.log(event);
+        });
+        newDataChannel.addEventListener('message', event => {
+            console.log(event);
+            // let message = event.data;
+            // let newMessageElement = document.createElement('p');
+            // newMessageElement.setAttribute('username', remoteUsername);
+            // newMessageElement.classList.add('chat-flex-others-message', 'message');
+            // newMessageElement.textContent = message;
+            // chatFlex.append(newMessageElement);
+        });
+
         //adds event listeners to the newly created object above
         rtcPeerConnection.onicecandidate = event => {
-            console.log(remoteUsername);
-
             if (event.candidate) {
-                console.log('Sending ice candidate');
                 socket.emit('candidate', {
                     type: 'candidate',
                     label: event.candidate.sdpMLineIndex,
@@ -589,17 +635,15 @@ socket.on('offer', (sessionDesc, remoteUsername) => {
                 console.log('Error occured when creating answer' + err);
             });
         rtcPeerConnections.set(remoteUsername, rtcPeerConnection);
+        dataChannels.set(remoteUsername, newDataChannel);
     }
 });
 
 //server emits answer
 socket.on('answer', (sessionDesc, remoteUsername) => {
-    console.log(`Received answer from ${remoteUsername}`);
-
     //stores it as remote desc
     let connection = rtcPeerConnections.get(remoteUsername);
     if (!connection.currentRemoteDescription) {
-        console.log('Setting RDP');
         //ignores answer if peer connection is established already
         connection
             .setRemoteDescription(new RTCSessionDescription(sessionDesc))
@@ -616,8 +660,6 @@ socket.on('candidate', (event, remoteUsername) => {
     //setting candidate is the last step for connection
     //we set candidate only if we haven't already
     let connection = rtcPeerConnections.get(remoteUsername);
-
-    console.log(connection.connectionState);
     let candidate = new RTCIceCandidate({
         sdpMLineIndex: event.label,
         candidate: event.candidate,
@@ -631,7 +673,6 @@ socket.on('candidate', (event, remoteUsername) => {
         .catch(err => {
             console.log(err);
         });
-    console.log(remoteUsername, connection);
 });
 
 //server emits room not found
@@ -646,6 +687,7 @@ socket.on('peerDisconnected', remoteUsername => {
     document.getElementById(`${remoteUsername}`).remove();
     //removing rtcPeerConnection
     rtcPeerConnections.delete(remoteUsername);
+    dataChannels.delete(remoteUsername);
 });
 
 socket.on('usernametaken', () => {

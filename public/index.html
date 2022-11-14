@@ -56,7 +56,6 @@
                         Copy roomID
                     </button>
                     <div class="settings-area">
-                        <i class="change-to-grid fa-solid fa-table-cells"></i>
                         <i class="sharescreen fa-solid fa-display"></i>
                         <i class="mute fa-solid fa-microphone-slash"></i>
                         <i class="settings fa-solid fa-gear"></i>
@@ -130,29 +129,13 @@
                     <div class="flex-video-item">
                         <span>user</span>
                         <video></video>
-                    </div>
-                    <div class="flex-video-item">
-                        <span>user</span>
-                        <video></video>
-                    </div>
-                    <div class="flex-video-item">
-                        <span>user</span>
-                        <video></video>
-                    </div>
-                    <div class="flex-video-item">
-                        <span>user</span>
-                        <video></video>
-                    </div>
-                    <div class="flex-video-item">
-                        <span>user</span>
-                        <video></video>
                     </div> -->
                 </div>
 
                 <div class="call-ui-grid-item4">
-                    <p class="chat-title chat-flex-item">Chat</p>
-                    <div class="message-area chat-flex-item"></div>
-                    <div class="input-area chat-flex-item">
+                    <p class="chat-title">Chat</p>
+                    <div class="chat-flex"></div>
+                    <div class="input-area">
                         <input
                             class="message-input"
                             autocomplete="off"
@@ -174,5 +157,6 @@
 
         <script src="/socket.io/socket.io.js"></script>
         <script src="scripts/client.js"></script>
+        <script src="scripts/adapter.js"></script>
     </body>
 </html>
