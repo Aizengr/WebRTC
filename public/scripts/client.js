@@ -32,6 +32,7 @@ const mainVideoSection = document.getElementById('mainVideoSection');
 const btnSendMessage = document.querySelector('.send-button');
 const inputChatMessage = document.querySelector('.message-input');
 const chatFlex = document.querySelector('.chat-flex');
+const userList = document.querySelector('.user-flex-items');
 
 const allVideos = document.getElementsByTagName('video');
 
@@ -117,6 +118,15 @@ function sendNewStream(stream) {
             .find(s => s.track.kind === audioTrack.kind);
         senderA.replaceTrack(audioTrack);
     });
+}
+
+//create new username within userlist
+
+function createUserListItem(username) {
+    let newP = document.createElement('p');
+    newP.classList.add('user-flex-item');
+    newP.textContent = username;
+    userList.append(newP);
 }
 
 //creating new remote video element
@@ -462,6 +472,13 @@ inputChatMessage.addEventListener('keypress', e => {
     }
 });
 
+//event listener for users list
+
+// btnUserList.addEventListener('mouseover', e => {
+//     userList.classList.toggle('user-list-active');
+//     btnUserList.classList.toggle('user-list-button-active');
+// });
+
 //handling remote message
 function handleMessage(data) {
     let msgObject = JSON.parse(data);
@@ -480,6 +497,7 @@ function handleMessage(data) {
 //server emits created
 socket.on('created', room => {
     roomID = room;
+    createUserListItem(username);
     changeLayout();
     changeModalSuccess();
     openModal();
@@ -499,6 +517,7 @@ socket.on('created', room => {
 
 //server emits joined
 socket.on('joined', room => {
+    createUserListItem(username);
     changeLayout();
     navigator.mediaDevices
         .getUserMedia(streamConstraints)
@@ -578,6 +597,7 @@ socket.on('ready', remoteUsername => {
             });
         rtcPeerConnections.set(remoteUsername, rtcPeerConnection);
         dataChannels.set(remoteUsername, newDataChannel);
+        createUserListItem(remoteUsername);
     }
 });
 
@@ -646,6 +666,7 @@ socket.on('offer', (sessionDesc, remoteUsername) => {
                 console.log('Error occured when creating answer' + err);
             });
         rtcPeerConnections.set(remoteUsername, rtcPeerConnection);
+        createUserListItem(remoteUsername);
     }
 });
 
