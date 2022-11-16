@@ -493,6 +493,21 @@ function createSendLocalMessage() {
     }
 }
 
+function createSendLocalFile(fileData) {
+    let newDiv = document.createElement();
+
+    const msgObject = {
+        value: fileData,
+        type: 'application',
+        from: username,
+    };
+    channel.send(JSON.stringify(msgObject));
+}
+
+function createSendLocalImage(fileData) {}
+
+function createSendLocalVideo(fileData) {}
+
 //event listener for sending chat message
 btnSendMessage.addEventListener('click', createSendLocalMessage);
 
@@ -505,14 +520,26 @@ inputChatMessage.addEventListener('keypress', e => {
 });
 
 //event listener for file sharing button
+//['.txt'],['.png', '.gif', '.jpeg', '.jpg', '.gif'],['.doc', '.pdf', '.zip'],['.mp4'],
+btnFileShare.addEventListener('click', async e => {
+    try {
+        const [fileHandle] = await window.showOpenFilePicker(filePickerOptions);
+        console.log(fileHandle);
 
-btnFileShare.addEventListener('click', e => {
-    window
-        .showOpenFilePicker(FilePickerOptions)
-        .then(fileHandle => {
-            let newFile = fileHandle.getFile();
-        })
-        .catch(err => console.log(err));
+        const fileData = await fileHandle.getFile();
+        if (
+            fileData.type.startsWith('text') ||
+            fileData.type.startsWith('application')
+        ) {
+            createSendLocalFile(fileData);
+        } else if (fileData.type.startsWith('image')) {
+            createSendLocalImage(fileData);
+        } else if (fileData.type.startsWith('video')) {
+            createSendLocalVideo(fileData);
+        }
+    } catch (err) {
+        console.log(err);
+    }
 });
 
 //handling remote message
