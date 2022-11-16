@@ -85,6 +85,7 @@ label {
     color: #fff;
     line-height: 2;
     background: linear-gradient(to top left, #353434, #1e1d1d, #000000);
+    box-shadow: 2px 4px 4px hsl(0deg 0% 0% / 0.44);
 }
 
 .main-grid {
@@ -246,6 +247,7 @@ video {
     width: 65%;
     height: 90%;
     justify-self: center;
+    box-shadow: 2px 4px 4px hsl(0deg 0% 0% / 0.44);
 }
 
 .main-username {
@@ -275,6 +277,7 @@ video {
     min-width: 24%;
     min-height: 95%;
     transition: transform ease 0.2s;
+    box-shadow: 2px 4px 4px hsl(0deg 0% 0% / 0.44);
 }
 
 .flex-video-item > video {
@@ -377,6 +380,8 @@ select {
     display: flex;
     flex-direction: column;
     position: relative;
+    -webkit-box-shadow: -3px -1px 10px 0 #191919;
+    box-shadow: -3px -1px 10px 0 #191919;
 }
 
 .chat-title {
@@ -434,14 +439,23 @@ select {
     font-family: 'Tahoma', sans-serif;
     font-size: large;
     width: 80%;
-    border-radius: 0.2rem;
+    border-radius: 0.5rem;
+}
+
+.send-button,
+.file-share-button {
+    cursor: pointer;
+    font-size: 1.7rem;
+    color: #7a566f;
 }
 
 .send-button {
-    cursor: pointer;
-    font-size: 1.7rem;
     padding-right: 1rem;
-    color: #7a566f;
+}
+
+.send-button:hover,
+.file-share-button:hover {
+    color: #c65588;
 }
 
 .user-list {
@@ -456,6 +470,7 @@ select {
     border-radius: 0.5rem;
     transition: transform ease 1s;
     z-index: 6;
+    box-shadow: 2px 4px 4px hsl(0deg 0% 0% / 0.44);
 }
 
 .user-list-title {

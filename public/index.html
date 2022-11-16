@@ -14,7 +14,7 @@
         <title>WebRTC Application</title>
     </head>
     <body>
-        <div class="main-grid">
+        <div class="main-grid hidden">
             <div class="website-title main-grid-item1">
                 <h1>WebRTC.</h1>
             </div>
@@ -48,7 +48,7 @@
             </div>
         </div>
 
-        <div class="call-page-layout hidden">
+        <div class="call-page-layout">
             <div class="user-list">
                 <p class="user-list-title">Participants</p>
                 <div class="user-flex-items"></div>
@@ -141,7 +141,11 @@
                     <p class="chat-title">ROOM CHAT</p>
                     <div class="chat-flex"></div>
                     <div class="input-area">
+                        <i
+                            class="file-share-button fa-solid fa-folder-open"
+                        ></i>
                         <input
+                            placeholder="Type here..."
                             class="message-input"
                             autocomplete="off"
                             id="chatMessage"

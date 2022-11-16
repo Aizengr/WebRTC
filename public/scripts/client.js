@@ -33,6 +33,7 @@ const btnSendMessage = document.querySelector('.send-button');
 const inputChatMessage = document.querySelector('.message-input');
 const chatFlex = document.querySelector('.chat-flex');
 const userList = document.querySelector('.user-flex-items');
+const btnFileShare = document.querySelector('.file-share-button');
 
 const allVideos = document.getElementsByTagName('video');
 
@@ -58,13 +59,45 @@ const iceServers = {
 };
 
 //Stream constraints, having min ideal and max values for better performance
-let streamConstraints = {
+const streamConstraints = {
     audio: true,
     video: {
         facingMode: 'user',
         width: { min: 1024, ideal: 1280, max: 1920 },
         height: { min: 576, ideal: 720, max: 1080 },
     },
+};
+
+const filePickerOptions = {
+    startIn: 'desktop',
+    types: [
+        {
+            description: 'Text files',
+            accept: {
+                'text/plain': ['.txt'],
+            },
+        },
+        {
+            description: 'Image files',
+            accept: {
+                'image/*': ['.png', '.gif', '.jpeg', '.jpg', '.gif'],
+            },
+        },
+        {
+            description: 'App files',
+            accept: {
+                'application/*': ['.doc', '.pdf', '.zip'],
+            },
+        },
+        {
+            description: 'Video files',
+            accept: {
+                'video/mp4': ['.mp4'],
+            },
+        },
+    ],
+    excludeAcceptAllOption: true,
+    multiple: false,
 };
 
 //connecting to socket.io server
@@ -450,7 +483,6 @@ function createSendLocalMessage() {
         newMessageElement.textContent = message;
         chatFlex.append(newMessageElement);
         dataChannels.forEach((channel, user) => {
-            console.log(channel);
             const msgObject = {
                 value: message,
                 type: 'chat',
@@ -472,12 +504,16 @@ inputChatMessage.addEventListener('keypress', e => {
     }
 });
 
-//event listener for users list
+//event listener for file sharing button
 
-// btnUserList.addEventListener('mouseover', e => {
-//     userList.classList.toggle('user-list-active');
-//     btnUserList.classList.toggle('user-list-button-active');
-// });
+btnFileShare.addEventListener('click', e => {
+    window
+        .showOpenFilePicker(FilePickerOptions)
+        .then(fileHandle => {
+            let newFile = fileHandle.getFile();
+        })
+        .catch(err => console.log(err));
+});
 
 //handling remote message
 function handleMessage(data) {
