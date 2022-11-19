@@ -38,6 +38,7 @@ const btnFileShare = document.querySelector('.file-share-button');
 const allVideos = document.getElementsByTagName('video');
 
 //GLOBAL variables
+const CHUNK_MAX_SIZE = 16000;
 let roomID;
 let localStream;
 //multiple rtc connections, username/connection key-value pair
@@ -72,27 +73,12 @@ const filePickerOptions = {
     startIn: 'desktop',
     types: [
         {
-            description: 'Text files',
-            accept: {
-                'text/plain': ['.txt'],
-            },
-        },
-        {
-            description: 'Image files',
-            accept: {
-                'image/*': ['.png', '.gif', '.jpeg', '.jpg', '.gif'],
-            },
-        },
-        {
-            description: 'App files',
-            accept: {
-                'application/*': ['.doc', '.pdf', '.zip'],
-            },
-        },
-        {
-            description: 'Video files',
+            description: 'Files',
             accept: {
                 'video/mp4': ['.mp4'],
+                'text/plain': ['.txt'],
+                'image/*': ['.png', '.gif', '.jpeg', '.jpg', '.gif'],
+                'application/*': ['.doc', '.pdf', '.zip'],
             },
         },
     ],
@@ -482,31 +468,95 @@ function createSendLocalMessage() {
         newMessageElement.classList.add('chat-flex-my-message', 'message');
         newMessageElement.textContent = message;
         chatFlex.append(newMessageElement);
+
+        const msgObject = {
+            value: message,
+            type: 'chat',
+            from: username,
+        };
+
         dataChannels.forEach((channel, user) => {
-            const msgObject = {
-                value: message,
-                type: 'chat',
-                from: username,
-            };
             channel.send(JSON.stringify(msgObject));
         });
     }
 }
 
-function createSendLocalFile(fileData) {
-    let newDiv = document.createElement();
-
-    const msgObject = {
-        value: fileData,
-        type: 'application',
-        from: username,
-    };
-    channel.send(JSON.stringify(msgObject));
+//creating a new element for a new file locally
+function createLocalFile(fileData) {
+    const newDiv = document.createElement('div');
+    newDiv.classList.add('file-flex', 'chat-flex-my-file');
+    const newPusername = document.createElement('p');
+    newPusername.textContent = username;
+    const newImg = document.createElement('img');
+    newImg.classList.add('file', 'my-file');
+    newImg.setAttribute('src', 'icons/my-file-arrow-down-solid.svg');
+    newImg.setAttribute('alt', 'file');
+    const newPfilename = document.createElement('p');
+    newPfilename.textContent = fileData.name;
+    newDiv.appendChild(newPusername);
+    newDiv.appendChild(newImg);
+    newDiv.appendChild(newPfilename);
+    chatFlex.append(newDiv);
 }
 
-function createSendLocalImage(fileData) {}
+//splitting size of file and sending it in chunks
+function splitAndSend(buffer) {
+    const numberOfChunks = (buffer.byteLength / CHUNK_MAX_SIZE) | 0;
+    console.log(numberOfChunks);
 
-function createSendLocalVideo(fileData) {}
+    if (numberOfChunks === 0) {
+        dataChannels.forEach((channel, user) => {
+            channel.send(buffer);
+        });
+    } else {
+        for (let i = 0; i < numberOfChunks; i++) {
+            let start = i * CHUNK_MAX_SIZE,
+                end = (i + 1) * CHUNK_MAX_SIZE;
+
+            dataChannels.forEach((channel, user) => {
+                channel.send(buffer.slice(start, end));
+            });
+        }
+
+        if (buffer.byteLength % CHUNK_MAX_SIZE) {
+            dataChannels.forEach((channel, user) => {
+                channel.send(buffer.slice(numberOfChunks * CHUNK_MAX_SIZE));
+            });
+        }
+    }
+}
+
+function sendLocalFile(fileData) {
+    //converting file(blob) to arraybuffer as Chrome does not support it
+
+    fileData
+        .arrayBuffer()
+        .then(buffer => {
+            //sending a custom obj containing all information
+            //for the file we are about to send next
+            const msgObject = {
+                from: username,
+                filename: fileData.name,
+                type: fileData.type,
+                len: buffer.byteLength,
+            };
+
+            //sending initial message
+            dataChannels.forEach((channel, user) => {
+                channel.send(JSON.stringify(msgObject));
+            });
+
+            //sending file in chunks
+            splitAndSend(buffer);
+        })
+        .catch(err => console.log(err));
+}
+
+function createLocalImage(fileData) {}
+function sendLocalImage(fileData) {}
+
+function createLocalVideo(fileData) {}
+function sendLocalVideo(fileData) {}
 
 //event listener for sending chat message
 btnSendMessage.addEventListener('click', createSendLocalMessage);
@@ -527,35 +577,96 @@ btnFileShare.addEventListener('click', async e => {
         console.log(fileHandle);
 
         const fileData = await fileHandle.getFile();
-        if (
-            fileData.type.startsWith('text') ||
-            fileData.type.startsWith('application')
-        ) {
-            createSendLocalFile(fileData);
-        } else if (fileData.type.startsWith('image')) {
-            createSendLocalImage(fileData);
-        } else if (fileData.type.startsWith('video')) {
-            createSendLocalVideo(fileData);
-        }
+        createLocalFile(fileData);
+        sendLocalFile(fileData);
     } catch (err) {
         console.log(err);
     }
 });
 
+//checking if data is JSON
+function isJson(data) {
+    try {
+        JSON.parse(data);
+    } catch (e) {
+        return false;
+    }
+    return true;
+}
+
+//handling chat message
+function handleChatMessage(msgObject) {
+    //chat message
+    let remoteUsername = msgObject.from;
+    let newMessageElement = document.createElement('p');
+    newMessageElement.setAttribute('username', remoteUsername);
+    newMessageElement.classList.add('chat-flex-others-message', 'message');
+    newMessageElement.textContent = msgObject.value;
+    chatFlex.append(newMessageElement);
+}
+
+// function createRemoteFile() {
+//     const newDiv = document.createElement('div');
+//         newDiv.classList.add('file-flex', 'chat-flex-others-file');
+//         const newPusername = document.createElement('p');
+//         newPusername.textContent = msgObject.from;
+//         const newImg = document.createElement('img');
+//         newImg.classList.add('file', 'others-file');
+//         newImg.setAttribute('src', 'icons/others-file-arrow-down-solid.svg');
+//         newImg.setAttribute('alt', 'file');
+//         const newPfilename = document.createElement('p');
+//         newPfilename.textContent = msgObject.value.name;
+
+//         newDiv.appendChild(newPusername);
+//         newDiv.appendChild(newImg);
+//         newDiv.appendChild(newPfilename);
+
+//         chatFlex.append(newDiv);
+// }
+
+//keeping global vars for length and type of upcoming
+let len, type, count, filename, buffer;
+
+function resetFileTransfer() {
+    len = 0;
+    count = 0;
+    type = '';
+    filename = '';
+    buffer = [];
+}
+
 //handling remote message
 function handleMessage(data) {
-    let msgObject = JSON.parse(data);
-    let remoteUsername = msgObject.from;
-    if (msgObject.type === 'chat') {
-        let newMessageElement = document.createElement('p');
-        newMessageElement.setAttribute('username', remoteUsername);
-        newMessageElement.classList.add('chat-flex-others-message', 'message');
-        newMessageElement.textContent = msgObject.value;
-        chatFlex.append(newMessageElement);
+    if (isJson(data)) {
+        let msgObject = JSON.parse(data);
+        if (msgObject.type === 'chat') {
+            handleChatMessage(msgObject);
+        } else {
+            buffer = new ArrayBuffer(msgObject.len);
+            count = 0;
+            len = msgObject.len;
+            type = msgObject.type;
+            filename = msgObject.filename;
+        }
+    } else {
+        //upcoming chunk
+        let chunkSize = data.byteLength;
+        let bufferView = new Uint8Array(buffer);
+        bufferView.set(data, count);
+        count += chunkSize;
+        console.log(count);
+        console.log(buffer.byteLength);
+
+        //last chunk
+        if (count === buffer.byteLength) {
+            let blob = new Blob([buffer], { type: type });
+            let newFile = new File([blob], filename, { type: type });
+            console.log(newFile);
+        }
     }
 }
 
-////SIGNALING
+////-------------------------SIGNALING
 
 //server emits created
 socket.on('created', room => {
@@ -571,7 +682,7 @@ socket.on('created', room => {
             localStream = stream;
             mainUsername.textContent = `${username}`;
             localVideo.setAttribute('id', `${username}`);
-            localVideo.srcObject = stream; //shows stream
+            localVideo.srcObject = stream; //shows stream locally
         })
         .catch(err => {
             console.log('An error occured when accessing media devices ' + err);
@@ -680,6 +791,8 @@ socket.on('offer', (sessionDesc, remoteUsername) => {
         let newDataChannel;
         rtcPeerConnection.addEventListener('datachannel', event => {
             newDataChannel = event.channel;
+            //need this for both Chrome and Mozilla
+            newDataChannel.binaryType = 'arraybuffer';
             console.log('Data channel created');
             dataChannels.set(remoteUsername, newDataChannel);
             newDataChannel.addEventListener('message', event => {

@@ -64,13 +64,10 @@ io.on('connection', socket => {
         console.log(
             'JOIN REQUEST - Socket: ' + socket.id + ' - Username: ' + username
         );
-        console.log(usernameCheck(room, username));
-
-        if (usernameCheck(room, username)) {
-            //if username does not exist
-            let myRoom = io.sockets.adapter.rooms.get(room);
-            if (myRoom) {
-                //if room exists
+        let myRoom = io.sockets.adapter.rooms.get(room);
+        if (myRoom) {
+            if (usernameCheck(room, username)) {
+                //if username does not exist
                 let client = {
                     username: username,
                     socketID: socket.id,
@@ -82,11 +79,11 @@ io.on('connection', socket => {
                 socket.join(room);
                 socket.emit('joined', room);
             } else {
-                //if room does not exist
-                socket.emit('roomnotfound', room);
+                io.to(socket.id).emit('usernametaken');
             }
         } else {
-            io.to(socket.id).emit('usernametaken');
+            //if room does not exist
+            socket.emit('roomnotfound', room);
         }
     });
 
