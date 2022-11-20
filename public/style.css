@@ -343,18 +343,31 @@ select {
     transform: translateY(100%);
 }
 
-.chat-flex {
+.call-ui-grid-item4 {
+    height: 100%;
+    width: 100%;
+    color: #fff;
+    font-family: inherit;
+    text-align: center;
+    grid-area: chat;
+    border-left: #b4a5ad solid 0.1rem;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    overflow-y: scroll;
+    position: relative;
+    overflow-y: auto;
+    box-shadow: -3px -1px 10px 0 #191919;
+}
+
+.chat-flex {
+    overflow-y: auto;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
     width: 100%;
     height: 100%;
     gap: 1rem;
 }
 
-/* width
 ::-webkit-scrollbar {
     width: 5px;
 }
@@ -367,18 +380,6 @@ select {
 ::-webkit-scrollbar-thumb {
     background-color: #c65588;
     border-radius: 5px;
-} */
-
-.call-ui-grid-item4 {
-    color: #fff;
-    font-family: inherit;
-    text-align: center;
-    grid-area: chat;
-    border-left: #b4a5ad solid 0.1rem;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    box-shadow: -3px -1px 10px 0 #191919;
 }
 
 .chat-title {
@@ -441,7 +442,7 @@ select {
     font-size: smaller;
 }
 
-.file p {
+.file > p {
     max-height: 50px;
     overflow-y: hidden;
 }
