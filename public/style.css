@@ -448,7 +448,7 @@ select {
     font-size: smaller;
 }
 
-.file > p {
+.file-flex > p {
     max-height: 50px;
     overflow-y: hidden;
 }

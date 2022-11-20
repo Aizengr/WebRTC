@@ -468,6 +468,7 @@ function createSendLocalMessage() {
         newMessageElement.classList.add('chat-flex-my-message', 'message');
         newMessageElement.textContent = message;
         chatFlex.append(newMessageElement);
+        newMessageElement.scrollIntoView();
 
         const msgObject = {
             value: message,
@@ -479,6 +480,26 @@ function createSendLocalMessage() {
             channel.send(JSON.stringify(msgObject));
         });
     }
+}
+
+// //event delegation for clicks on files under chat
+chatFlex.addEventListener('click', e => {
+    if (e.target && e.target.matches('.file')) {
+        console.log('clicked file');
+        let targetA = e.target.nextElementSibling.nextElementSibling;
+        targetA.click();
+    }
+});
+
+//attaching file to element
+function attachFileToElement(element, file) {
+    element.style.cursor = 'pointer';
+    const blob = window.URL.createObjectURL(file);
+    const anchor = document.createElement('a');
+    anchor.style.display = 'none';
+    anchor.href = blob;
+    anchor.download = file.name;
+    element.appendChild(anchor);
 }
 
 //creating a new element for a new file locally
@@ -496,13 +517,41 @@ function createLocalFile(fileData) {
     newDiv.appendChild(newPusername);
     newDiv.appendChild(newImg);
     newDiv.appendChild(newPfilename);
+
+    //attaching file to our div
+    attachFileToElement(newDiv, fileData);
+
     chatFlex.append(newDiv);
+    newDiv.scrollIntoView();
+}
+
+//creating a new element for a new file locally
+function createOthersFile(fileData) {
+    const newDiv = document.createElement('div');
+    newDiv.classList.add('file-flex', 'chat-flex-others-file');
+    const newPusername = document.createElement('p');
+    newPusername.textContent = username;
+    const newImg = document.createElement('img');
+    newImg.classList.add('file', 'others-file');
+    newImg.setAttribute('src', 'icons/others-file-arrow-down-solid.svg');
+    newImg.setAttribute('alt', 'file');
+    const newPfilename = document.createElement('p');
+    newPfilename.textContent = fileData.name;
+    newDiv.appendChild(newPusername);
+    newDiv.appendChild(newImg);
+    newDiv.appendChild(newPfilename);
+
+    //attaching file to our div
+    attachFileToElement(newDiv, fileData);
+
+    chatFlex.append(newDiv);
+    newDiv.scrollIntoView();
 }
 
 //splitting size of file and sending it in chunks
 function splitAndSend(buffer) {
     const numberOfChunks = (buffer.byteLength / CHUNK_MAX_SIZE) | 0;
-    console.log(numberOfChunks);
+    console.log(buffer);
 
     if (numberOfChunks === 0) {
         dataChannels.forEach((channel, user) => {
@@ -528,6 +577,7 @@ function splitAndSend(buffer) {
 
 function sendLocalFile(fileData) {
     //converting file(blob) to arraybuffer as Chrome does not support it
+    console.log(fileData);
 
     fileData
         .arrayBuffer()
@@ -574,8 +624,6 @@ inputChatMessage.addEventListener('keypress', e => {
 btnFileShare.addEventListener('click', async e => {
     try {
         const [fileHandle] = await window.showOpenFilePicker(filePickerOptions);
-        console.log(fileHandle);
-
         const fileData = await fileHandle.getFile();
         createLocalFile(fileData);
         sendLocalFile(fileData);
@@ -603,37 +651,11 @@ function handleChatMessage(msgObject) {
     newMessageElement.classList.add('chat-flex-others-message', 'message');
     newMessageElement.textContent = msgObject.value;
     chatFlex.append(newMessageElement);
+    newMessageElement.scrollIntoView();
 }
-
-// function createRemoteFile() {
-//     const newDiv = document.createElement('div');
-//         newDiv.classList.add('file-flex', 'chat-flex-others-file');
-//         const newPusername = document.createElement('p');
-//         newPusername.textContent = msgObject.from;
-//         const newImg = document.createElement('img');
-//         newImg.classList.add('file', 'others-file');
-//         newImg.setAttribute('src', 'icons/others-file-arrow-down-solid.svg');
-//         newImg.setAttribute('alt', 'file');
-//         const newPfilename = document.createElement('p');
-//         newPfilename.textContent = msgObject.value.name;
-
-//         newDiv.appendChild(newPusername);
-//         newDiv.appendChild(newImg);
-//         newDiv.appendChild(newPfilename);
-
-//         chatFlex.append(newDiv);
-// }
 
 //keeping global vars for length and type of upcoming
-let len, type, count, filename, buffer;
-
-function resetFileTransfer() {
-    len = 0;
-    count = 0;
-    type = '';
-    filename = '';
-    buffer = [];
-}
+let len, type, count, filename, buffer, bufferView;
 
 //handling remote message
 function handleMessage(data) {
@@ -643,6 +665,9 @@ function handleMessage(data) {
             handleChatMessage(msgObject);
         } else {
             buffer = new ArrayBuffer(msgObject.len);
+            console.log(buffer);
+            //need a view to change dat under ArrayBuffer
+            bufferView = new Uint8Array(buffer);
             count = 0;
             len = msgObject.len;
             type = msgObject.type;
@@ -650,18 +675,26 @@ function handleMessage(data) {
         }
     } else {
         //upcoming chunk
+
         let chunkSize = data.byteLength;
-        let bufferView = new Uint8Array(buffer);
-        bufferView.set(data, count);
+        //need a new view for the arraybufferchunk
+        let newView = new Uint8Array(data);
+
+        //setting chunk data on our main view
+        bufferView.set([...newView], count);
+        //keeping track of chunks
         count += chunkSize;
         console.log(count);
         console.log(buffer.byteLength);
 
         //last chunk
         if (count === buffer.byteLength) {
-            let blob = new Blob([buffer], { type: type });
+            let blob = new Blob([bufferView], {
+                type: type,
+            });
             let newFile = new File([blob], filename, { type: type });
             console.log(newFile);
+            createOthersFile(newFile);
         }
     }
 }
