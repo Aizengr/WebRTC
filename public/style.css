@@ -354,7 +354,7 @@ select {
     display: flex;
     flex-direction: column;
     position: relative;
-    overflow-y: auto;
+    top: 0%;
     box-shadow: -3px -1px 10px 0 #191919;
 }
 
@@ -363,9 +363,14 @@ select {
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     width: 100%;
     height: 100%;
     gap: 1rem;
+}
+
+.chat-flex > :first-child {
+    margin-top: auto;
 }
 
 ::-webkit-scrollbar {
@@ -390,6 +395,7 @@ select {
 }
 
 .input-area {
+    z-index: 200;
     padding-left: 0.5rem;
     display: flex;
     gap: 0.5rem;
