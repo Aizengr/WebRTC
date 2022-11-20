@@ -479,6 +479,14 @@ select {
     background-color: #c65588;
 }
 
+.file-image {
+    object-fit: cover;
+    border-radius: 1rem;
+    width: 100px;
+    height: 140px;
+    background-color: #c65588;
+}
+
 .message-input {
     background-color: #b4a5ad;
     font-weight: 500;

@@ -482,9 +482,12 @@ function createSendLocalMessage() {
     }
 }
 
-// //event delegation for clicks on files under chat
+//event delegation for clicks on files under chat
 chatFlex.addEventListener('click', e => {
-    if (e.target && e.target.matches('.file')) {
+    if (
+        e.target &&
+        (e.target.matches('.file') || e.target.matches('.file-image'))
+    ) {
         console.log('clicked file');
         let targetA = e.target.nextElementSibling.nextElementSibling;
         targetA.click();
@@ -503,51 +506,31 @@ function attachFileToElement(element, file) {
 }
 
 //creating a new element for a new file locally
-function createLocalFile(fileData) {
+function createFile(fileData, targetUsername) {
     const newDiv = document.createElement('div');
-    newDiv.classList.add('file-flex', 'chat-flex-my-file');
     const newPusername = document.createElement('p');
-    newPusername.textContent = username;
+    newPusername.textContent = targetUsername;
     const newImg = document.createElement('img');
-    newImg.classList.add('file', 'my-file');
-    newImg.setAttribute('src', 'icons/my-file-arrow-down-solid.svg');
-    newImg.setAttribute('alt', 'file');
     const newPfilename = document.createElement('p');
     newPfilename.textContent = fileData.name;
+    newImg.setAttribute('alt', 'file');
+    if (targetUsername === username) {
+        newDiv.classList.add('file-flex', 'chat-flex-others-file');
+        newImg.classList.add('file', 'others-file');
+        newImg.setAttribute('src', 'icons/others-file-arrow-down-solid.svg');
+    } else {
+        newDiv.classList.add('file-flex', 'chat-flex-my-file');
+        newImg.classList.add('file', 'my-file');
+        newImg.setAttribute('src', 'icons/my-file-arrow-down-solid.svg');
+    }
     newDiv.appendChild(newPusername);
     newDiv.appendChild(newImg);
     newDiv.appendChild(newPfilename);
-
     //attaching file to our div
     attachFileToElement(newDiv, fileData);
-
     chatFlex.append(newDiv);
     newDiv.scrollIntoView();
 }
-
-//creating a new element for a new file locally
-function createOthersFile(fileData) {
-    const newDiv = document.createElement('div');
-    newDiv.classList.add('file-flex', 'chat-flex-others-file');
-    const newPusername = document.createElement('p');
-    newPusername.textContent = username;
-    const newImg = document.createElement('img');
-    newImg.classList.add('file', 'others-file');
-    newImg.setAttribute('src', 'icons/others-file-arrow-down-solid.svg');
-    newImg.setAttribute('alt', 'file');
-    const newPfilename = document.createElement('p');
-    newPfilename.textContent = fileData.name;
-    newDiv.appendChild(newPusername);
-    newDiv.appendChild(newImg);
-    newDiv.appendChild(newPfilename);
-
-    //attaching file to our div
-    attachFileToElement(newDiv, fileData);
-
-    chatFlex.append(newDiv);
-    newDiv.scrollIntoView();
-}
-
 //splitting size of file and sending it in chunks
 function splitAndSend(buffer) {
     const numberOfChunks = (buffer.byteLength / CHUNK_MAX_SIZE) | 0;
@@ -575,7 +558,7 @@ function splitAndSend(buffer) {
     }
 }
 
-function sendLocalFile(fileData) {
+function sendMyFile(fileData) {
     //converting file(blob) to arraybuffer as Chrome does not support it
     console.log(fileData);
 
@@ -602,11 +585,31 @@ function sendLocalFile(fileData) {
         .catch(err => console.log(err));
 }
 
-function createLocalImage(fileData) {}
-function sendLocalImage(fileData) {}
+function createImage(fileData, targetUsername) {
+    const newDiv = document.createElement('div');
+    const newPusername = document.createElement('p');
+    const newImg = document.createElement('img');
+    newPusername.textContent = targetUsername;
+    newImg.classList.add('file-image');
 
-function createLocalVideo(fileData) {}
-function sendLocalVideo(fileData) {}
+    if (targetUsername === username) {
+        newDiv.classList.add('file-flex', 'chat-flex-my-file');
+    } else {
+        newDiv.classList.add('file-flex', 'chat-flex-others-file');
+    }
+    let imageURL = window.URL.createObjectURL(fileData);
+
+    newImg.setAttribute('src', imageURL);
+    newImg.setAttribute('alt', fileData.name);
+    newDiv.appendChild(newPusername);
+    newDiv.appendChild(newImg);
+
+    attachFileToElement(newDiv, fileData);
+    chatFlex.append(newDiv);
+    newDiv.scrollIntoView();
+}
+
+function createVideo(fileData, targetUsername) {}
 
 //event listener for sending chat message
 btnSendMessage.addEventListener('click', createSendLocalMessage);
@@ -625,8 +628,17 @@ btnFileShare.addEventListener('click', async e => {
     try {
         const [fileHandle] = await window.showOpenFilePicker(filePickerOptions);
         const fileData = await fileHandle.getFile();
-        createLocalFile(fileData);
-        sendLocalFile(fileData);
+        if (
+            fileData.type.startsWith('text') ||
+            fileData.type.startsWith('application')
+        ) {
+            createFile(fileData, username);
+        } else if (fileData.type.startsWith('image')) {
+            createImage(fileData);
+        } else if (fileData.type.startsWith('video')) {
+            createVideo(fileData);
+        }
+        sendMyFile(fileData);
     } catch (err) {
         console.log(err);
     }
@@ -643,7 +655,7 @@ function isJson(data) {
 }
 
 //handling chat message
-function handleChatMessage(msgObject) {
+function handleOthersChatMessage(msgObject) {
     //chat message
     let remoteUsername = msgObject.from;
     let newMessageElement = document.createElement('p');
@@ -655,27 +667,27 @@ function handleChatMessage(msgObject) {
 }
 
 //keeping global vars for length and type of upcoming
-let len, type, count, filename, buffer, bufferView;
+let len, type, count, filename, buffer, bufferView, targetUsername;
 
 //handling remote message
 function handleMessage(data) {
     if (isJson(data)) {
         let msgObject = JSON.parse(data);
         if (msgObject.type === 'chat') {
-            handleChatMessage(msgObject);
+            handleOthersChatMessage(msgObject);
         } else {
             buffer = new ArrayBuffer(msgObject.len);
             console.log(buffer);
-            //need a view to change dat under ArrayBuffer
+            //need a view for main file's ArrayBuffer
             bufferView = new Uint8Array(buffer);
             count = 0;
             len = msgObject.len;
             type = msgObject.type;
             filename = msgObject.filename;
+            targetUsername = msgObject.from;
         }
     } else {
         //upcoming chunk
-
         let chunkSize = data.byteLength;
         //need a new view for the arraybufferchunk
         let newView = new Uint8Array(data);
@@ -684,8 +696,6 @@ function handleMessage(data) {
         bufferView.set([...newView], count);
         //keeping track of chunks
         count += chunkSize;
-        console.log(count);
-        console.log(buffer.byteLength);
 
         //last chunk
         if (count === buffer.byteLength) {
@@ -693,8 +703,13 @@ function handleMessage(data) {
                 type: type,
             });
             let newFile = new File([blob], filename, { type: type });
-            console.log(newFile);
-            createOthersFile(newFile);
+            if (type.startsWith('application') || type.startsWith('text')) {
+                createFile(newFile, targetUsername);
+            } else if (type.startsWith('image')) {
+                createImage(newFile);
+            } else if (type.startsWith('video')) {
+                createVideo(newFile);
+            }
         }
     }
 }
