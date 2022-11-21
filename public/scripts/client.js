@@ -484,13 +484,19 @@ function createSendLocalMessage() {
 
 //event delegation for clicks on files under chat
 chatFlex.addEventListener('click', e => {
-    if (
-        e.target &&
-        (e.target.matches('.file') || e.target.matches('.file-image'))
-    ) {
-        console.log('clicked file');
-        let targetA = e.target.nextElementSibling.nextElementSibling;
-        targetA.click();
+    if (e.target) {
+        if (e.target.matches('.file')) {
+            console.log('clicked file');
+            let targetA = e.target.nextElementSibling.nextElementSibling;
+            targetA.click();
+        } else if (
+            e.target.matches('.file-image') ||
+            e.target.matches('.file-video')
+        ) {
+            console.log('clicked image/video');
+            let targetA = e.target.nextElementSibling;
+            targetA.click();
+        }
     }
 });
 
@@ -609,13 +615,37 @@ function createImage(fileData, targetUsername) {
     newDiv.scrollIntoView();
 }
 
-function createVideo(fileData, targetUsername) {}
+function createVideo(fileData, targetUsername) {
+    const newDiv = document.createElement('div');
+    const newPusername = document.createElement('p');
+    const newVideo = document.createElement('video');
+    newPusername.textContent = targetUsername;
+    newVideo.classList.add('file-video');
+
+    if (targetUsername === username) {
+        newDiv.classList.add('file-flex', 'chat-flex-my-file');
+    } else {
+        newDiv.classList.add('file-flex', 'chat-flex-others-file');
+    }
+
+    let videoURL = window.URL.createObjectURL(fileData);
+
+    newVideo.setAttribute('src', videoURL);
+    newVideo.setAttribute('type', 'video/mp4');
+    newVideo.setAttribute('autoplay', false);
+
+    newDiv.appendChild(newPusername);
+    newDiv.appendChild(newVideo);
+
+    attachFileToElement(newDiv, fileData);
+    chatFlex.append(newDiv);
+    newDiv.scrollIntoView();
+}
 
 //event listener for sending chat message
 btnSendMessage.addEventListener('click', createSendLocalMessage);
 
 //event listener for pressing enter while on message input area
-
 inputChatMessage.addEventListener('keypress', e => {
     if (e.key === 'Enter') {
         createSendLocalMessage();
@@ -634,9 +664,9 @@ btnFileShare.addEventListener('click', async e => {
         ) {
             createFile(fileData, username);
         } else if (fileData.type.startsWith('image')) {
-            createImage(fileData);
+            createImage(fileData, username);
         } else if (fileData.type.startsWith('video')) {
-            createVideo(fileData);
+            createVideo(fileData, username);
         }
         sendMyFile(fileData);
     } catch (err) {
@@ -706,9 +736,9 @@ function handleMessage(data) {
             if (type.startsWith('application') || type.startsWith('text')) {
                 createFile(newFile, targetUsername);
             } else if (type.startsWith('image')) {
-                createImage(newFile);
+                createImage(newFile, targetUsername);
             } else if (type.startsWith('video')) {
-                createVideo(newFile);
+                createVideo(newFile, targetUsername);
             }
         }
     }

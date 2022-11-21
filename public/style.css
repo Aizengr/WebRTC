@@ -460,7 +460,7 @@ select {
 
 .chat-flex-others-file {
     align-self: flex-end;
-    margin-right: 0.8rem;
+    margin-right: 1.5rem;
 }
 
 .file {
@@ -485,6 +485,13 @@ select {
     width: 100px;
     height: 140px;
     background-color: #c65588;
+}
+
+.file-video {
+    object-fit: cover;
+    border-radius: 1rem;
+    width: 150px;
+    height: 90px;
 }
 
 .message-input {
