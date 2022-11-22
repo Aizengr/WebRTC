@@ -978,3 +978,11 @@ socket.on('peerDisconnected', remoteUsername => {
 socket.on('usernametaken', () => {
     textUsernameError.textContent = `Username taken. Please pick another username and re-join the call.`;
 });
+
+// TODOS
+
+// FIX MIC ISSUE WHEN ENABLING SS
+// FIX PARTICIPANT LIST WHEN ONE LEAVES
+// MUTE VIDEO
+// DONT SHOW USERNAME WHEN SENDING MULTIPLE MESSAGE
+// PUT ACTIVE DEVICES FIRST

@@ -11,10 +11,17 @@ const app = express();
 //keeping all client objects
 const allClients = new Map();
 
+// LOCALHOST ---
 const httpsOptions = {
     key: fs.readFileSync('./backend/security/cert.key'),
     cert: fs.readFileSync('./backend/security/cert.pem'),
 };
+
+// SERVER ---
+// const httpsOptions = {
+//     key: fs.readFileSync('/etc/letsencrypt/live/webrtcproject.online/privkey.pem'),
+//     cert: fs.readFileSync('/etc/letsencrypt/live/webrtcproject.online/fullchain.pem'),
+// };
 
 let https = require('https').Server(httpsOptions, app);
 let io = require('socket.io')(https);
