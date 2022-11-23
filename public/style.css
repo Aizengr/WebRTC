@@ -170,7 +170,7 @@ label {
 .call-ui-grid {
     position: fixed;
     gap: 0.5rem;
-    height: 98vh;
+    height: 98.8vh;
     width: 100vw;
     display: grid;
     grid-template-columns: 85% 15%;
@@ -236,7 +236,7 @@ label {
 
 video {
     background-color: #000;
-    object-fit: cover;
+    object-fit: fill;
     width: 100%;
     height: 100%;
     transition: transform ease 0.2s;
@@ -398,6 +398,7 @@ select {
     z-index: 200;
     padding-left: 0.5rem;
     display: flex;
+    padding-top: 1rem;
     gap: 0.5rem;
     justify-self: end;
     justify-content: center;
@@ -429,6 +430,8 @@ select {
     color: rgba(255, 255, 255, 0.454);
     top: -17px;
     left: 2px;
+    text-align: start;
+    width: 8rem;
 }
 
 .chat-flex-others-message {

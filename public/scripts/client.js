@@ -27,6 +27,7 @@ const speakerOptions = document.querySelector('.speakers');
 const btnApply = document.querySelector('.apply-settings');
 const btnSaveSettings = document.querySelector('.save-settings');
 const btnMute = document.querySelector('.mute');
+const btnVideoMute = document.querySelector('.mute-video');
 const btnSharescreen = document.querySelector('.sharescreen');
 const mainVideoSection = document.getElementById('mainVideoSection');
 const btnSendMessage = document.querySelector('.send-button');
@@ -38,7 +39,7 @@ const btnFileShare = document.querySelector('.file-share-button');
 const allVideos = document.getElementsByTagName('video');
 
 //GLOBAL variables
-const CHUNK_MAX_SIZE = 16000;
+const CHUNK_MAX_SIZE = 10000;
 let roomID;
 let localStream;
 //multiple rtc connections, username/connection key-value pair
@@ -46,6 +47,7 @@ let rtcPeerConnections = new Map();
 let dataChannels = new Map();
 let username;
 let isScreenSharing = false;
+let currAudioTrack; //for sharescreen, keeping mic
 
 //STUN SERVERS
 const iceServers = {
@@ -93,26 +95,28 @@ const socket = io();
 
 //device functions
 function updateSettingsDeviceList() {
-    let selects = document.querySelectorAll('select');
-    selects.forEach(select => {
-        while (select.firstChild) {
-            select.removeChild(select.lastChild);
-        }
-    });
+    let options = document.querySelectorAll('option');
 
     navigator.mediaDevices
         .enumerateDevices()
         .then(devices => {
             devices.forEach(device => {
-                let option = document.createElement('option');
-                option.innerHTML = `${device.label}`;
-                option.value = `${device.deviceId}`;
-                if (device.kind === 'videoinput') {
-                    cameraOptions.append(option);
-                } else if (device.kind === 'audioinput') {
-                    micOptions.append(option);
-                } else {
-                    speakerOptions.append(option);
+                let deviceExists = false;
+                options.forEach(option => {
+                    if (option.value === device.deviceId) deviceExists = true;
+                });
+                //creating new elements only if they have not yet added
+                if (!deviceExists) {
+                    let option = document.createElement('option');
+                    option.innerHTML = `${device.label}`;
+                    option.value = `${device.deviceId}`;
+                    if (device.kind === 'videoinput') {
+                        cameraOptions.append(option);
+                    } else if (device.kind === 'audioinput') {
+                        micOptions.append(option);
+                    } else {
+                        speakerOptions.append(option);
+                    }
                 }
             });
         })
@@ -121,6 +125,7 @@ function updateSettingsDeviceList() {
 
 //sending new stream after input device changes/sharescreen
 function sendNewStream(stream) {
+    btnSharescreen.style.color = '#ffffff';
     localStream = stream;
     localVideo.srcObject = stream; //shows stream
     const [videoTrack] = stream.getVideoTracks();
@@ -344,6 +349,17 @@ btnMute.addEventListener('click', e => {
     }
 });
 
+//listener for muting video
+btnVideoMute.addEventListener('click', e => {
+    if (!localStream.getVideoTracks()[0].enabled) {
+        btnVideoMute.style.color = '#ffffff';
+        localStream.getVideoTracks()[0].enabled = true;
+    } else {
+        btnVideoMute.style.color = '#c65588';
+        localStream.getVideoTracks()[0].enabled = false;
+    }
+});
+
 //capturing screen
 const shareScreen = () => {
     btnSharescreen.style.color = '#c65588';
@@ -358,6 +374,9 @@ const shareScreen = () => {
         .getDisplayMedia(sharescreenConstraints)
         .then(stream => {
             let [screen] = stream.getVideoTracks();
+            console.log(typeof currAudioTrack);
+
+            stream.addTrack(currAudioTrack);
             localStream = stream;
             localVideo.srcObject = stream;
             isScreenSharing = true;
@@ -397,21 +416,49 @@ btnSharescreen.addEventListener('click', e => {
 
 //changing devices to new ones
 const changeInputDevices = () => {
+    btnSharescreen.style.color = '#ffffff';
+    let audioDevID = micOptions.options[micOptions.selectedIndex].value;
+    let videoDevID = cameraOptions.options[cameraOptions.selectedIndex].value;
+    let speakerDevID =
+        speakerOptions.options[speakerOptions.selectedIndex].value;
+
     let newConstraints = {
         audio: {
             deviceId: {
-                exact: micOptions.options[micOptions.selectedIndex].value,
+                exact: audioDevID,
             },
         },
         video: {
             deviceId: {
-                exact: cameraOptions.options[cameraOptions.selectedIndex].value,
+                exact: videoDevID,
             },
         },
     };
+
+    //adding selected devices first on settings menu
+    let selectedAudio = document.querySelector(`option[value="${audioDevID}"]`);
+    let selectedCamera = document.querySelector(
+        `option[value="${videoDevID}"]`
+    );
+    let selectedSpeaker = document.querySelector(
+        `option[value="${speakerDevID}"]`
+    );
+
+    selectedAudio.remove();
+    micOptions.prepend(selectedAudio);
+
+    selectedCamera.remove();
+    cameraOptions.prepend(selectedCamera);
+
+    selectedSpeaker.remove();
+    speakerOptions.prepend(selectedSpeaker);
+
     navigator.mediaDevices
         .getUserMedia(newConstraints) //getting media devices
-        .then(stream => sendNewStream(stream)) //sending stream
+        .then(stream => {
+            [currAudioTrack] = stream.getAudioTracks();
+            sendNewStream(stream);
+        })
         .catch(err => {
             console.log('An error occured when accessing media devices ' + err);
         });
@@ -521,13 +568,13 @@ function createFile(fileData, targetUsername) {
     newPfilename.textContent = fileData.name;
     newImg.setAttribute('alt', 'file');
     if (targetUsername === username) {
-        newDiv.classList.add('file-flex', 'chat-flex-others-file');
-        newImg.classList.add('file', 'others-file');
-        newImg.setAttribute('src', 'icons/others-file-arrow-down-solid.svg');
-    } else {
         newDiv.classList.add('file-flex', 'chat-flex-my-file');
         newImg.classList.add('file', 'my-file');
         newImg.setAttribute('src', 'icons/my-file-arrow-down-solid.svg');
+    } else {
+        newDiv.classList.add('file-flex', 'chat-flex-others-file');
+        newImg.classList.add('file', 'others-file');
+        newImg.setAttribute('src', 'icons/others-file-arrow-down-solid.svg');
     }
     newDiv.appendChild(newPusername);
     newDiv.appendChild(newImg);
@@ -757,6 +804,7 @@ socket.on('created', room => {
     navigator.mediaDevices
         .getUserMedia(streamConstraints) //getting media devices
         .then(stream => {
+            [currAudioTrack] = stream.getAudioTracks();
             localStream = stream;
             mainUsername.textContent = `${username}`;
             localVideo.setAttribute('id', `${username}`);
@@ -774,6 +822,7 @@ socket.on('joined', room => {
     navigator.mediaDevices
         .getUserMedia(streamConstraints)
         .then(stream => {
+            [currAudioTrack] = stream.getAudioTracks();
             localStream = stream;
             mainUsername.textContent = `${username}`;
             localVideo.setAttribute('id', `${username}`);
@@ -973,16 +1022,15 @@ socket.on('peerDisconnected', remoteUsername => {
     //removing rtcPeerConnection
     rtcPeerConnections.delete(remoteUsername);
     dataChannels.delete(remoteUsername);
+
+    let users = document.querySelectorAll('.user-flex-item');
+    users.forEach(user => {
+        if (user.textContent === remoteUsername) {
+            user.remove();
+        }
+    });
 });
 
 socket.on('usernametaken', () => {
     textUsernameError.textContent = `Username taken. Please pick another username and re-join the call.`;
 });
-
-// TODOS
-
-// FIX MIC ISSUE WHEN ENABLING SS
-// FIX PARTICIPANT LIST WHEN ONE LEAVES
-// MUTE VIDEO
-// DONT SHOW USERNAME WHEN SENDING MULTIPLE MESSAGE
-// PUT ACTIVE DEVICES FIRST
