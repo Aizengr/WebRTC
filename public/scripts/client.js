@@ -11,7 +11,6 @@ const btnCloseModal = document.getElementById('gotRoomID');
 const btnCopyID = document.getElementById('copyID');
 const inputUsername = document.getElementById('username');
 const textUsernameError = document.getElementById('usernameError');
-
 const callPageLayout = document.querySelector('.call-page-layout');
 const mainGrid = document.querySelector('.main-grid');
 const flexContainerVideos = document.querySelector('.flex-video-container');
@@ -35,11 +34,11 @@ const inputChatMessage = document.querySelector('.message-input');
 const chatFlex = document.querySelector('.chat-flex');
 const userList = document.querySelector('.user-flex-items');
 const btnFileShare = document.querySelector('.file-share-button');
-
+const progressBar = document.querySelector('.progress-bar');
 const allVideos = document.getElementsByTagName('video');
 
 //GLOBAL variables
-const CHUNK_MAX_SIZE = 10000;
+const CHUNK_MAX_SIZE = 256000; //not sure why this works
 let roomID;
 let localStream;
 //multiple rtc connections, username/connection key-value pair
@@ -389,6 +388,7 @@ const shareScreen = () => {
             });
         })
         .catch(err => {
+            btnSharescreen.style.color = '#ffffff';
             console.log('An error occured when accessing media devices ' + err);
         });
 };
@@ -586,29 +586,35 @@ function createFile(fileData, targetUsername) {
 }
 //splitting size of file and sending it in chunks
 function splitAndSend(buffer) {
-    const numberOfChunks = (buffer.byteLength / CHUNK_MAX_SIZE) | 0;
-    console.log(buffer);
-
-    if (numberOfChunks === 0) {
-        dataChannels.forEach((channel, user) => {
-            channel.send(buffer);
-        });
-    } else {
-        for (let i = 0; i < numberOfChunks; i++) {
-            let start = i * CHUNK_MAX_SIZE,
-                end = (i + 1) * CHUNK_MAX_SIZE;
-
-            dataChannels.forEach((channel, user) => {
-                channel.send(buffer.slice(start, end));
-            });
+    dataChannels.forEach((channel, user) => {
+        progressBar.classList.toggle('hidden');
+        let count = 0;
+        let totalChunks = Math.round(buffer.byteLength / CHUNK_MAX_SIZE);
+        function send(buffer) {
+            while (buffer.byteLength) {
+                if (
+                    channel.bufferedAmount > channel.bufferedAmountLowThreshold
+                ) {
+                    channel.onbufferedamountlow = () => {
+                        channel.onbufferedamountlow = null;
+                        send(buffer);
+                    };
+                    return;
+                }
+                const chunk = buffer.slice(0, CHUNK_MAX_SIZE);
+                buffer = buffer.slice(CHUNK_MAX_SIZE, buffer.byteLength);
+                channel.send(chunk);
+                count++;
+                progressBar.value = count / totalChunks;
+                if (count === totalChunks) {
+                    setTimeout(() => {
+                        progressBar.classList.toggle('hidden');
+                    }, 2000);
+                }
+            }
         }
-
-        if (buffer.byteLength % CHUNK_MAX_SIZE) {
-            dataChannels.forEach((channel, user) => {
-                channel.send(buffer.slice(numberOfChunks * CHUNK_MAX_SIZE));
-            });
-        }
-    }
+        send(buffer);
+    });
 }
 
 function sendMyFile(fileData) {
@@ -754,7 +760,6 @@ function handleMessage(data) {
             handleOthersChatMessage(msgObject);
         } else {
             buffer = new ArrayBuffer(msgObject.len);
-            console.log(buffer);
             //need a view for main file's ArrayBuffer
             bufferView = new Uint8Array(buffer);
             count = 0;
@@ -766,6 +771,7 @@ function handleMessage(data) {
     } else {
         //upcoming chunk
         let chunkSize = data.byteLength;
+
         //need a new view for the arraybufferchunk
         let newView = new Uint8Array(data);
 

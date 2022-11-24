@@ -208,6 +208,15 @@ label {
     font-size: 2rem;
 }
 
+.progress-bar {
+    width: 100%;
+    height: 1rem;
+}
+
+progress::-webkit-progress-value {
+    background: #c65588 !important;
+}
+
 .call-ui-grid-item1 i {
     padding-top: 5px;
     padding-right: 0.7rem;
@@ -345,7 +354,7 @@ select {
 
 .call-ui-grid-item4 {
     height: 100%;
-    width: 100%;
+    width: 95%;
     color: #fff;
     font-family: inherit;
     text-align: center;
@@ -398,7 +407,8 @@ select {
     z-index: 200;
     padding-left: 0.5rem;
     display: flex;
-    padding-top: 1rem;
+    padding-top: 0.7rem;
+    padding-bottom: 0.2rem;
     gap: 0.5rem;
     justify-self: end;
     justify-content: center;
@@ -502,8 +512,8 @@ select {
     font-weight: 500;
     font-family: 'Tahoma', sans-serif;
     font-size: large;
-    width: 80%;
-    border-radius: 0.5rem;
+    width: 100%;
+    border-radius: 0.4rem;
 }
 
 .send-button,
@@ -514,7 +524,7 @@ select {
 }
 
 .send-button {
-    padding-right: 1rem;
+    padding-right: 0.3rem;
 }
 
 .send-button:hover,
