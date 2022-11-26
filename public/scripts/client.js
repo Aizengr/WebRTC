@@ -547,6 +547,18 @@ chatFlex.addEventListener('click', e => {
     }
 });
 
+//fullscreen on click for main video
+localVideo.addEventListener('click', e => {
+    e.target
+        .requestFullscreen({ navigationUI: 'hide' })
+        .then(() => {})
+        .catch(err => {
+            alert(
+                `An error occurred while trying to switch into fullscreen mode: ${err.message} (${err.name})`
+            );
+        });
+});
+
 //attaching file to element
 function attachFileToElement(element, file) {
     element.style.cursor = 'pointer';
@@ -1040,3 +1052,5 @@ socket.on('peerDisconnected', remoteUsername => {
 socket.on('usernametaken', () => {
     textUsernameError.textContent = `Username taken. Please pick another username and re-join the call.`;
 });
+
+//preview ta files anti gia download

@@ -253,8 +253,8 @@ video {
 
 .main-video {
     text-align: center;
-    width: 65%;
-    height: 90%;
+    min-width: 60%;
+    min-height: 90%;
     justify-self: center;
     box-shadow: 2px 4px 4px hsl(0deg 0% 0% / 0.44);
 }
