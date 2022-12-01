@@ -130,6 +130,17 @@ label {
     z-index: 10;
 }
 
+.preview-modal {
+    position: fixed;
+    line-height: 1;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 5px;
+    box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+
 .overlay {
     position: absolute;
     top: 0;
@@ -510,11 +521,26 @@ select {
 
 .download-file {
     font-size: 1rem;
-    color: white;
+    color: gray;
     cursor: pointer;
     position: absolute;
     top: 50%;
-    left: 125%;
+}
+
+.my-download-video {
+    left: 160px;
+}
+
+.others-download-video {
+    left: -25px;
+}
+
+.my-download-image {
+    left: 110px;
+}
+
+.others-download-image {
+    left: -25px;
 }
 
 .message-input {

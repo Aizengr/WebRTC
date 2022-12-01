@@ -36,6 +36,7 @@ const userList = document.querySelector('.user-flex-items');
 const btnFileShare = document.querySelector('.file-share-button');
 const progressBar = document.querySelector('.progress-bar');
 const allVideos = document.getElementsByTagName('video');
+const previewModal = document.querySelector('.preview-modal');
 
 //GLOBAL variables
 const CHUNK_MAX_SIZE = 256000; //not sure why this works
@@ -195,6 +196,7 @@ const openModal = () => {
 const closeModal = () => {
     modal.classList.add('hidden');
     overlay.classList.add('hidden');
+    previewModal.classList.add('hidden');
 };
 
 const changeLayout = () => {
@@ -279,6 +281,9 @@ overlay.addEventListener('click', closeModal);
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
         closeModal();
+    }
+    if (e.key === 'Escape' && !previewModal.classList.contains('hidden')) {
+        closePreviewModal();
     }
 });
 
@@ -529,6 +534,36 @@ function createSendLocalMessage() {
     }
 }
 
+function createPreviewModal(element) {
+    console.log(element);
+
+    if (previewModal.firstChild) {
+        previewModal.removeChild(previewModal.firstChild);
+    }
+    let modalElement;
+    if (element.classList.contains('file-image')) {
+        modalElement = document.createElement('img');
+    } else {
+        modalElement = document.createElement('video');
+        modalElement.setAttribute('autoplay', true);
+    }
+    modalElement.src = element.src;
+    modalElement.style.width = '100%';
+    modalElement.style.height = '100%';
+    modalElement.style.position = 'relative';
+    previewModal.appendChild(modalElement);
+}
+
+function showPreviewModal() {
+    previewModal.classList.remove('hidden');
+    overlay.classList.remove('hidden');
+}
+
+function closePreviewModal() {
+    previewModal.classList.add('hidden');
+    overlay.classList.add('hidden');
+}
+
 //event delegation for clicks on files under chat
 chatFlex.addEventListener('click', e => {
     if (e.target) {
@@ -540,9 +575,10 @@ chatFlex.addEventListener('click', e => {
             e.target.matches('.file-image') ||
             e.target.matches('.file-video')
         ) {
-            console.log('clicked image/video');
-            let targetA = e.target.nextElementSibling;
-            targetA.click();
+            createPreviewModal(e.target);
+            showPreviewModal();
+        } else if (e.target.matches('.download-file')) {
+            e.target.firstChild.click();
         }
     }
 });
@@ -660,13 +696,17 @@ function createImage(fileData, targetUsername) {
     const newDiv = document.createElement('div');
     const newPusername = document.createElement('p');
     const newImg = document.createElement('img');
+    const dIcon = document.createElement('i');
     newPusername.textContent = targetUsername;
     newImg.classList.add('file-image');
+    dIcon.classList.add('download-file', 'fa-solid', 'fa-download');
 
     if (targetUsername === username) {
         newDiv.classList.add('file-flex', 'chat-flex-my-file');
+        dIcon.classList.add('my-download-image');
     } else {
         newDiv.classList.add('file-flex', 'chat-flex-others-file');
+        dIcon.classList.add('others-download-image');
     }
     let imageURL = window.URL.createObjectURL(fileData);
 
@@ -674,8 +714,9 @@ function createImage(fileData, targetUsername) {
     newImg.setAttribute('alt', fileData.name);
     newDiv.appendChild(newPusername);
     newDiv.appendChild(newImg);
+    newDiv.appendChild(dIcon);
 
-    attachFileToElement(newDiv, fileData);
+    attachFileToElement(dIcon, fileData);
     chatFlex.append(newDiv);
     newDiv.scrollIntoView();
 }
@@ -683,14 +724,18 @@ function createImage(fileData, targetUsername) {
 function createVideo(fileData, targetUsername) {
     const newDiv = document.createElement('div');
     const newPusername = document.createElement('p');
+    const dIcon = document.createElement('i');
     const newVideo = document.createElement('video');
     newPusername.textContent = targetUsername;
     newVideo.classList.add('file-video');
+    dIcon.classList.add('download-file', 'fa-solid', 'fa-download');
 
     if (targetUsername === username) {
         newDiv.classList.add('file-flex', 'chat-flex-my-file');
+        dIcon.classList.add('my-download-video');
     } else {
         newDiv.classList.add('file-flex', 'chat-flex-others-file');
+        dIcon.classList.add('others-download-video');
     }
 
     let videoURL = window.URL.createObjectURL(fileData);
@@ -701,8 +746,9 @@ function createVideo(fileData, targetUsername) {
 
     newDiv.appendChild(newPusername);
     newDiv.appendChild(newVideo);
+    newDiv.appendChild(dIcon);
 
-    attachFileToElement(newDiv, fileData);
+    attachFileToElement(dIcon, fileData);
     chatFlex.append(newDiv);
     newDiv.scrollIntoView();
 }

@@ -14,7 +14,7 @@
         <title>WebRTC Application</title>
     </head>
     <body>
-        <div class="main-grid hidden">
+        <div class="main-grid">
             <div class="website-title main-grid-item1">
                 <h1>WebRTC.</h1>
             </div>
@@ -48,7 +48,7 @@
             </div>
         </div>
 
-        <div class="call-page-layout">
+        <div class="call-page-layout hidden">
             <div class="user-list">
                 <p class="user-list-title">Participants</p>
                 <div class="user-flex-items"></div>
@@ -119,33 +119,39 @@
                 <div
                     class="call-ui-grid-item3 flex-video-container"
                     id="secVideo"
-                >
-                    <!-- <div class="flex-video-item">
-                        <span>user</span>
-                        <video></video>
-                    </div>
-                    <div class="flex-video-item">
-                        <span>user</span>
-                        <video></video>
-                    </div>
-                    <div class="flex-video-item">
-                        <span>user</span>
-                        <video></video>
-                    </div>
-                    <div class="flex-video-item">
-                        <span>user</span>
-                        <video></video>
-                    </div> -->
-                </div>
+                ></div>
 
                 <div class="call-ui-grid-item4">
                     <p class="chat-title">ROOM CHAT</p>
                     <div class="chat-flex">
-                        <div class="file-flex chat-flex-my-file">
+                        <!-- <div class="file-flex chat-flex-my-file">
                             <p>username</p>
                             <video class="file-video"></video>
-                            <i class="download-file fa-solid fa-download"></i>
+                            <i
+                                class="download-file my-download-video fa-solid fa-download"
+                            ></i>
                         </div>
+                        <div class="file-flex chat-flex-others-file">
+                            <p>username</p>
+                            <video class="file-video"></video>
+                            <i
+                                class="download-file others-download-video fa-solid fa-download"
+                            ></i>
+                        </div>
+                        <div class="file-flex chat-flex-others-file">
+                            <p>username</p>
+                            <video class="file-image"></video>
+                            <i
+                                class="download-file others-download-image fa-solid fa-download"
+                            ></i>
+                        </div>
+                        <div class="file-flex chat-flex-my-file">
+                            <p>username</p>
+                            <video class="file-image"></video>
+                            <i
+                                class="download-file my-download-image fa-solid fa-download"
+                            ></i>
+                        </div> -->
                     </div>
                     <progress
                         id="progressBar"
@@ -168,6 +174,8 @@
                 </div>
             </div>
         </div>
+
+        <div class="preview-modal hidden"></div>
 
         <div class="modal hidden">
             <div id="modalText"></div>
