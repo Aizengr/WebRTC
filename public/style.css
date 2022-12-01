@@ -459,6 +459,7 @@ select {
     display: block;
     color: rgba(255, 255, 255, 0.454);
     font-size: smaller;
+    position: relative;
 }
 
 .file-flex > p {
@@ -505,6 +506,15 @@ select {
     border-radius: 1rem;
     width: 150px;
     height: 90px;
+}
+
+.download-file {
+    font-size: 1rem;
+    color: white;
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    left: 125%;
 }
 
 .message-input {

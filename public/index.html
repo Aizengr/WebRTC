@@ -14,7 +14,7 @@
         <title>WebRTC Application</title>
     </head>
     <body>
-        <div class="main-grid">
+        <div class="main-grid hidden">
             <div class="website-title main-grid-item1">
                 <h1>WebRTC.</h1>
             </div>
@@ -48,7 +48,7 @@
             </div>
         </div>
 
-        <div class="call-page-layout hidden">
+        <div class="call-page-layout">
             <div class="user-list">
                 <p class="user-list-title">Participants</p>
                 <div class="user-flex-items"></div>
@@ -141,14 +141,11 @@
                 <div class="call-ui-grid-item4">
                     <p class="chat-title">ROOM CHAT</p>
                     <div class="chat-flex">
-                        <!-- <div class="file-flex chat-flex-my-file">
+                        <div class="file-flex chat-flex-my-file">
                             <p>username</p>
                             <video class="file-video"></video>
+                            <i class="download-file fa-solid fa-download"></i>
                         </div>
-                        <div class="file-flex chat-flex-others-file">
-                            <p>username</p>
-                            <video class="file-video"></video>
-                        </div> -->
                     </div>
                     <progress
                         id="progressBar"

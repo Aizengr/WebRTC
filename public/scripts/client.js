@@ -898,7 +898,7 @@ socket.on('ready', remoteUsername => {
             newRemoteVideo.srcObject = remoteStream;
         });
 
-        //prepares an offer and sends offer
+        //prepares an offer and sends it
         rtcPeerConnection
             .createOffer()
             .then(sessionDesc => {
@@ -1041,6 +1041,9 @@ socket.on('peerDisconnected', remoteUsername => {
     rtcPeerConnections.delete(remoteUsername);
     dataChannels.delete(remoteUsername);
 
+    //need to close the connection instantly
+    //to avoid delays when disconnecting
+
     let users = document.querySelectorAll('.user-flex-item');
     users.forEach(user => {
         if (user.textContent === remoteUsername) {
@@ -1054,3 +1057,9 @@ socket.on('usernametaken', () => {
 });
 
 //preview ta files anti gia download
+//heavy cpu usage kai kollame otan einai polla atoma sto call
+//constraints? bitrate? maxFramerate? encoding?!?!?
+//progress bar goes back and forth when sending to
+//multiple users as it keeps being updated
+//also it is not removed when sending a small file
+//probably around 1 chunk
