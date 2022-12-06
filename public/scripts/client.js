@@ -66,8 +66,8 @@ const streamConstraints = {
     audio: true,
     video: {
         facingMode: 'user',
-        width: { min: 1024, ideal: 1280, max: 1920 },
-        height: { min: 576, ideal: 720, max: 1080 },
+        width: { min: 1024, ideal: 1280, max: 1280 },
+        height: { min: 576, ideal: 720, max: 720 },
     },
 };
 
@@ -653,7 +653,9 @@ function splitAndSend(buffer) {
                 buffer = buffer.slice(CHUNK_MAX_SIZE, buffer.byteLength);
                 channel.send(chunk);
                 count++;
-                progressBar.value = count / totalChunks;
+                if (progressBar.value < count / totalChunks) {
+                    progressBar.value = count / totalChunks;
+                }
                 if (count === totalChunks) {
                     setTimeout(() => {
                         progressBar.classList.toggle('hidden');
