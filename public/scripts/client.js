@@ -161,7 +161,7 @@ function createRemoteVideo(remoteUsername) {
     newDiv.setAttribute('id', `${remoteUsername}`);
     let newSpan = document.createElement('span');
     newSpan.classList.add('remote-username');
-    newSpan.textContent = ` ${remoteUsername}`;
+    newSpan.textContent = `${remoteUsername}`;
     let video = document.createElement('video');
     video.classList.add('bottom');
     video.setAttribute('id', `${remoteUsername}`);
@@ -583,16 +583,19 @@ chatFlex.addEventListener('click', e => {
     }
 });
 
-//fullscreen on click for main video
-localVideo.addEventListener('click', e => {
-    e.target
-        .requestFullscreen({ navigationUI: 'hide' })
-        .then(() => {})
-        .catch(err => {
-            alert(
-                `An error occurred while trying to switch into fullscreen mode: ${err.message} (${err.name})`
-            );
-        });
+//even delegation for fullscreen on click for main video
+
+document.addEventListener('click', e => {
+    if (e.target.classList.contains('target-main')) {
+        e.target
+            .requestFullscreen({ navigationUI: 'hide' })
+            .then(() => {})
+            .catch(err => {
+                alert(
+                    `An error occurred while trying to switch into fullscreen mode: ${err.message} (${err.name})`
+                );
+            });
+    }
 });
 
 //attaching file to element
@@ -1084,7 +1087,27 @@ socket.on('roomnotfound', room => {
 //handing peer disconnection
 socket.on('peerDisconnected', remoteUsername => {
     //removing html element
-    document.getElementById(`${remoteUsername}`).remove();
+    let target = document.getElementById(`${remoteUsername}`);
+    if (!target.classList.contains('flex-video-item')) {
+        //removing first child element from flex to move it to main
+        let firstFlexItem = flexContainerVideos.firstChild;
+        let firstFlexVideo = firstFlexItem.lastChild;
+        let firstVideoUsername = firstFlexItem.firstChild;
+        flexContainerVideos.removeChild(firstFlexItem);
+
+        //adding it to main
+        let main = document.querySelector('.target-main');
+        let mainUsernameElement = document.querySelector('.main-username');
+        mainVideoSection.removeChild(main);
+        mainVideoSection.appendChild(firstFlexVideo);
+        mainVideoSection;
+        mainUsernameElement.textContent = firstVideoUsername;
+    } else {
+        target.remove();
+    }
+    //closing rtcPeerConection
+    rtcPeerConnections.get(remoteUsername).close();
+
     //removing rtcPeerConnection
     rtcPeerConnections.delete(remoteUsername);
     dataChannels.delete(remoteUsername);
@@ -1104,10 +1127,7 @@ socket.on('usernametaken', () => {
     textUsernameError.textContent = `Username taken. Please pick another username and re-join the call.`;
 });
 
-//preview ta files anti gia download
-//heavy cpu usage kai kollame otan einai polla atoma sto call
-//constraints? bitrate? maxFramerate? encoding?!?!?
-//progress bar goes back and forth when sending to
-//multiple users as it keeps being updated
 //also it is not removed when sending a small file
 //probably around 1 chunk
+
+//if remote client dcs while being on the main windows we have issues

@@ -314,7 +314,11 @@ video {
 }
 
 .flex-video-item:hover {
-    transform: scale(1.1);
+    transform: scale(1.05);
+}
+
+::-webkit-media-controls {
+    display: none !important;
 }
 
 .settings-overlay {
