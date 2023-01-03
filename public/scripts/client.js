@@ -1126,8 +1126,3 @@ socket.on('peerDisconnected', remoteUsername => {
 socket.on('usernametaken', () => {
     textUsernameError.textContent = `Username taken. Please pick another username and re-join the call.`;
 });
-
-//also it is not removed when sending a small file
-//probably around 1 chunk
-
-//if remote client dcs while being on the main windows we have issues
