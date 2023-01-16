@@ -89,7 +89,7 @@ const filePickerOptions = {
 };
 
 //connecting to socket.io server
-const socket = io({ transports: ['websocket'] });
+const socket = io();
 
 //detecting whos speaking
 
