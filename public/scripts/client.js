@@ -89,7 +89,7 @@ const filePickerOptions = {
 };
 
 //connecting to socket.io server
-const socket = io();
+const socket = io({ transports: ['websocket'] });
 
 //detecting whos speaking
 
@@ -637,8 +637,8 @@ function createFile(fileData, targetUsername) {
 }
 //splitting size of file and sending it in chunks
 function splitAndSend(buffer) {
+    progressBar.classList.remove('hidden');
     dataChannels.forEach((channel, user) => {
-        progressBar.classList.toggle('hidden');
         let count = 0;
         let totalChunks = Math.round(buffer.byteLength / CHUNK_MAX_SIZE);
         function send(buffer) {
@@ -661,7 +661,7 @@ function splitAndSend(buffer) {
                 }
                 if (count === totalChunks) {
                     setTimeout(() => {
-                        progressBar.classList.toggle('hidden');
+                        progressBar.classList.add('hidden');
                     }, 2000);
                 }
             }
@@ -747,7 +747,7 @@ function createVideo(fileData, targetUsername) {
 
     newVideo.setAttribute('src', videoURL);
     newVideo.setAttribute('type', 'video/mp4');
-    newVideo.setAttribute('autoplay', false);
+    newVideo.autoplay = false;
 
     newDiv.appendChild(newPusername);
     newDiv.appendChild(newVideo);
@@ -1092,15 +1092,16 @@ socket.on('peerDisconnected', remoteUsername => {
         //removing first child element from flex to move it to main
         let firstFlexItem = flexContainerVideos.firstChild;
         let firstFlexVideo = firstFlexItem.lastChild;
-        let firstVideoUsername = firstFlexItem.firstChild;
+        let firstVideoUsername = firstFlexItem.firstChild.textContent;
         flexContainerVideos.removeChild(firstFlexItem);
 
         //adding it to main
         let main = document.querySelector('.target-main');
         let mainUsernameElement = document.querySelector('.main-username');
+        firstFlexVideo.classList.remove('bottom');
+        firstFlexVideo.classList.add('target-main');
         mainVideoSection.removeChild(main);
         mainVideoSection.appendChild(firstFlexVideo);
-        mainVideoSection;
         mainUsernameElement.textContent = firstVideoUsername;
     } else {
         target.remove();
@@ -1126,3 +1127,6 @@ socket.on('peerDisconnected', remoteUsername => {
 socket.on('usernametaken', () => {
     textUsernameError.textContent = `Username taken. Please pick another username and re-join the call.`;
 });
+
+//thema me megala arxeia ston SERVER
+//argei na kanei disconnect
