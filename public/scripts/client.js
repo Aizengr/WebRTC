@@ -638,6 +638,7 @@ function createFile(fileData, targetUsername) {
 //splitting size of file and sending it in chunks
 function splitAndSend(buffer) {
     progressBar.classList.remove('hidden');
+    progressBar.value = 0;
     dataChannels.forEach((channel, user) => {
         let count = 0;
         let totalChunks = Math.round(buffer.byteLength / CHUNK_MAX_SIZE);
@@ -1088,40 +1089,45 @@ socket.on('roomnotfound', room => {
 socket.on('peerDisconnected', remoteUsername => {
     //removing html element
     let target = document.getElementById(`${remoteUsername}`);
-    if (!target.classList.contains('flex-video-item')) {
-        //removing first child element from flex to move it to main
-        let firstFlexItem = flexContainerVideos.firstChild;
-        let firstFlexVideo = firstFlexItem.lastChild;
-        let firstVideoUsername = firstFlexItem.firstChild.textContent;
-        flexContainerVideos.removeChild(firstFlexItem);
+    try {
+        if (!target.classList.contains('flex-video-item')) {
+            //removing first child element from flex to move it to main
+            let firstFlexItem = flexContainerVideos.firstChild;
+            let firstFlexVideo = firstFlexItem.lastChild;
+            let firstVideoUsername = firstFlexItem.firstChild.textContent;
+            flexContainerVideos.removeChild(firstFlexItem);
 
-        //adding it to main
-        let main = document.querySelector('.target-main');
-        let mainUsernameElement = document.querySelector('.main-username');
-        firstFlexVideo.classList.remove('bottom');
-        firstFlexVideo.classList.add('target-main');
-        mainVideoSection.removeChild(main);
-        mainVideoSection.appendChild(firstFlexVideo);
-        mainUsernameElement.textContent = firstVideoUsername;
-    } else {
-        target.remove();
-    }
-    //closing rtcPeerConection
-    rtcPeerConnections.get(remoteUsername).close();
-
-    //removing rtcPeerConnection
-    rtcPeerConnections.delete(remoteUsername);
-    dataChannels.delete(remoteUsername);
-
-    //need to close the connection instantly
-    //to avoid delays when disconnecting
-
-    let users = document.querySelectorAll('.user-flex-item');
-    users.forEach(user => {
-        if (user.textContent === remoteUsername) {
-            user.remove();
+            //adding it to main
+            let main = document.querySelector('.target-main');
+            let mainUsernameElement = document.querySelector('.main-username');
+            firstFlexVideo.classList.remove('bottom');
+            firstFlexVideo.classList.add('target-main');
+            mainVideoSection.removeChild(main);
+            mainVideoSection.appendChild(firstFlexVideo);
+            mainUsernameElement.textContent = firstVideoUsername;
+        } else {
+            target.remove();
         }
-    });
+        //closing rtcPeerConection
+        rtcPeerConnections.get(remoteUsername).close();
+
+        //removing rtcPeerConnection
+        rtcPeerConnections.delete(remoteUsername);
+        dataChannels.delete(remoteUsername);
+
+        //need to close the connection instantly
+        //to avoid delays when disconnecting
+
+        let users = document.querySelectorAll('.user-flex-item');
+        users.forEach(user => {
+            if (user.textContent === remoteUsername) {
+                user.remove();
+            }
+        });
+    } catch (e) {
+        console.log(remoteUsername);
+        console.log(e);
+    }
 });
 
 socket.on('usernametaken', () => {
@@ -1129,4 +1135,3 @@ socket.on('usernametaken', () => {
 });
 
 //thema me megala arxeia ston SERVER
-//argei na kanei disconnect
